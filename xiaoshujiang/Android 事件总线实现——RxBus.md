@@ -84,13 +84,73 @@ RxJava1 升级到 RxJava2
 ### 简单使用
 - RxJava 1
 ``` java
+// 数据发送端
+// data 为任意数据类型，以 Data 类型代表
+RxBus.getDefault().post(data);
 ```
 ``` java
+	.
+	.
+	.
+// 数据接收端
+    mSubscription = RxBus
+        .getDefault()
+        .toObservable(Data.class)
+        .subscribe(new Action1<Data>()){
+            @Override
+            public void call(Data data){
+                    // do something with data ...
+            }
+        }
+	.
+	.
+	.
+// 监听使用离开之后（如关闭监听所在界面）时记得解绑监听，避免引起内存泄漏
+if (mSubscription != null && !mSubscription.isUnsubscribed()) {
+	mSubscription.unsubscribe();
+ }
 ``` 
 - RxJava 2
  ``` java
+// 数据发送端
+// data 为任意数据类型，以 Data 类型代表
+RxBus.getDefault().post(data);
 ```
 ``` java
+private Disposable mDisposable;
+	.
+	.
+	.
+RxBus.getDefault()
+        .toObservable(Data.class)
+        //使用 subscribeWith 和 subscribe 都可以
+        .subscribeWith(new Observer<Data>){
+            @Override
+            public void onSubscribe(Disposable d) {
+                mDisposable = d;
+            }
+
+            @Override
+            public void onNext(Data data) {
+                // do something with data ...
+            }
+
+            @Override
+            public void onError(Throwable e) {
+                // do something with e ...
+            }
+
+            @Override
+            public void onComplete() {
+
+            }
+        };
+	.
+	.
+	.
+if (mDisposable != null && !mDisposable.isDisposed()) {
+                mDisposable.dispose();
+}
 ```
 # 带 Code 封装
 通过上面的简单实用会发现一个问题，每发送一个类都需要一个发送对象类，接收的时候也需要传入该对象类。假如存在观察者 A、B、C 都已经注册了对 D.class 消息接收。如果此时只想向 A 发送 D对象，那么就会造成多个观察者都收到这个消息。这也违背了只想传给 A 观察者的初衷。因此我的想法是为每个发送对象在添加一个发送 Code 当 Code 和 class 都满足时观察者才会接收处理消息，这样如果需要通知多个观察者那么观察者注册时使用相同的 Code 就行。
@@ -115,13 +175,17 @@ public class Action
   - RxJava 1
 ```java
 public class RxBus {
+
     private static volatile RxBus defaultInstance;
 
-    private final Subject<Object, Object> bus;
+    private final Subject<Object,Object> bus;
+
     // PublishSubject只会把在订阅发生的时间点之后来自原始Observable的数据发射给观察者
-    public RxBus() {
+    private RxBus() {
         bus = new SerializedSubject<>(PublishSubject.create());
     }
+
+    // 单例RxBus
     public static RxBus getDefault() {
         if (defaultInstance == null) {
             synchronized (RxBus.class) {
@@ -130,20 +194,107 @@ public class RxBus {
                 }
             }
         }
-        return defaultInstance ;
+        return defaultInstance;
     }
+
     // 发送一个新的事件
-    public void post (Object o) {
-        bus.onNext(o);
+    public void postWithCode(int code, Object action) {
+        bus.onNext(new Action(code,action));
     }
+
     // 根据传递的 eventType 类型返回特定类型(eventType)的 被观察者
-    public <T> Observable<T> toObservable (Class<T> eventType) {
+    public <T> Observable<T> toObservableWithCode(final int code, Class<T> eventType) {
+        return bus.ofType(Action.class)
+                // 过滤掉非自己 code 对应的接收项
+                .filter(new Func1<Action,Boolean>(){
+                    @Override
+                    public boolean call(Action action){
+                        return action.code == code;
+                    }
+                })
+                // 返回传递的数据对象
+                .map(new Func1<Action,Object>){
+                    @Override
+                    public Object call(Action action){
+                        return action.data;
+                    }
+                }
+                .cast(eventType);
+    }
+```
+  - RxJava 2
+``` java
+public class RxBus {
+
+    private static volatile RxBus defaultInstance;
+
+    private final Subject<Object> bus;
+
+    // PublishSubject只会把在订阅发生的时间点之后来自原始Observable的数据发射给观察者
+    private RxBus() {
+        bus = PublishSubject.create().toSerialized();
+    }
+
+    // 单例RxBus
+    public static RxBus getDefault() {
+        if (defaultInstance == null) {
+            synchronized (RxBus.class) {
+                if (defaultInstance == null) {
+                    defaultInstance = new RxBus();
+                }
+            }
+        }
+        return defaultInstance;
+    }
+
+    // 发送一个新的事件，所有订阅此事件的订阅者都会收到
+    public void post(Object action) {
+        bus.onNext(action);
+    }
+
+    // 用 code 指定订阅此事件的对应 code 的订阅者
+    public void postWithCode(int code, Object action) {
+        bus.onNext(new Action(code, action));
+    }
+
+    // 根据传递的 eventType 类型返回特定类型(eventType)的 被观察者
+    public <T> Observable<T> toObservable(Class<T> eventType) {
         return bus.ofType(eventType);
+    }
+
+    // 根据传递的 eventType 类型返回特定类型(eventType)的 被观察者,
+    public <T> Observable<T> toObservableWithCode(final int code, Class<T> eventType) {
+        return bus.ofType(Action.class)
+                .filter(new Predicate<Action>() {
+                    @Override
+                    public boolean test(Action action) throws Exception {
+                        return action.code == code;
+                    }
+                })
+                .map(new Function<Action, Object>() {
+                    @Override
+                    public Object apply(Action action) throws Exception {
+                        return action.data;
+                    }
+                })
+                .cast(eventType);
     }
 }
 ```
-  - RxJava 2
-
+与简单使用一样，封装上 RxJava1 与 RxJava2 仅用操作符上的一些差别，实现思路未改变都是在发送时将行为 code 和数据对象 object 封装成 Action 对象，在转换成 Observable 时返回 Action 对象的处理结果，通过 Action 的 code 进行数据过滤。
   ### 使用
-  - RxJava 1
-  - RxJava 2
+除了发送和接收数据对象时会同时接收 code 参数外，带 Code 的 Rxbus 封装使用与不带 Code 完全一致
+``` java
+RxBus.getDefault().postWithCode(code, data);
+```
+``` java
+  	.
+	.
+	.
+  RxBus.getDefault()
+            .toObservableWithCode(RxConstants.BACK_PRESSED_CODE, String.class)
+			.subscribeWith(...);
+	.
+	.
+	.
+``` 
