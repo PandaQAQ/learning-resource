@@ -79,7 +79,7 @@ public class RxBus {
     }
 }
 ```
-RxJava1 升级到 RxJava2
+RxJava1 升级到 RxJava2 只是在初始化方式上有一些变化。
 
 ### 简单使用
 - RxJava 1
