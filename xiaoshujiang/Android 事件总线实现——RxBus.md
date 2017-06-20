@@ -298,3 +298,15 @@ RxBus.getDefault().postWithCode(code, data);
 	.
 	.
 ``` 
+# 总结
+RxBus 普通使用的具体使用场景大家可以参考我的开源项目 [熊猫眼][1]
+RxBus 在引入了 RxJava、RxAndroid 库后实现可以说非常简洁了，如果已经在使用 RxJava 了就大胆的尝试 RxBus 吧。有好处也必定有坏处，譬如上面提到的简单实现就有两个特别头疼的问题：
+- Sticky 事件时就是不适用的。
+- 订阅处理过程中一旦发生了异常，那么该处订阅就再也收不到了除非重新订阅。这是因为当出现异常时 onError() 被调用了，订阅者和被订阅者的关系被解除了。
+上面的两个问题我推荐大家看一下 [YoKey][2] 的 [[深入 RxBus ：支持 Sticky 事件]][3]、 [[深入 RxBus ：异常处理]][4]两篇文章。
+
+
+  [1]: https://github.com/PandaQAQ/PandaEye
+  [2]: http://www.jianshu.com/u/6b372d09b617
+  [3]: http://www.jianshu.com/p/71ab00a2677b
+  [4]: http://www.jianshu.com/p/0493cc28a811
