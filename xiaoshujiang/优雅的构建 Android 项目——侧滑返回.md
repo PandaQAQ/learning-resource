@@ -1,5 +1,5 @@
 ---
-title: 优雅的构建 Android 项目——侧滑返回
+title: 优雅的构建 Android 项目——侧滑返回使用及原理分析
 ---
 大屏幕手机在返回前页操作时，点击左上角的 APP 内返回键或者手机自带的返回按键都不是很方便，这时候能通过屏幕侧滑退出当前页面体验就会好很多了。但是 Android 系统并没有想 IOS 一样自带侧滑返回，好在 Android 轮子比较多，本文记录一下个人开源项目 PandaEye 中使用的侧滑返回库 SwipBackLayout 。该库参考 github 上的开源库 [SwipeBackLayout][1] 做了一些简化；
 # 使用方式
@@ -81,6 +81,8 @@ style 中的属性设置
 然后在 manifest 文件中将继承 SwipeBackActivity 的 Activity 的 theme 设置为 TranslucentFullScreenTheme 即可解决滑动过程中背景覆盖问题。
 # 原理浅析
 ## 工作原理
+要明白侧滑返回的原理我们得先明白 Android Activity 界面的视图层级关系：
+
 
 ## ViewPager 滑动冲突的处理
 
