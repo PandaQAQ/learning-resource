@@ -124,12 +124,134 @@ Activity 和 PhoneWindow 这里可以忽略，重点在 DecorView上。这个 De
 - 3、将 LinearLayout 背景资源重置，并从 DecorView 中移除
 - 4、将 LinearLayout  添加到自定义的 SwipeBackLayout 中
 - 5、将自定义的 SwipeBackLayout 添加到 DecorView 中
-## 滑动处理
+## 滑动处理及 ViewPager 处理
+在 SwipeBackLayout 中通过重写 onInterceptTouchEvent(MotionEvent ev) 方法和 onTouchEvent(MotionEvent ev) 方法来实现侧滑返回事件的处理及对 ViewPager 滑动的兼容的。
+``` java
+@Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
+        //处理ViewPager冲突问题
+        ViewPager mViewPager = getTouchViewPager(mViewPagers, ev);
+        //当无触摸ViewPager或者该ViewPager未滑动到最左则不对滑动时间进行拦截
+        if (mViewPager != null && mViewPager.getCurrentItem() != 0) {
+            return super.onInterceptTouchEvent(ev);
+        }
+        switch (ev.getAction()) {
+            case MotionEvent.ACTION_DOWN:
+                downX = tempX = (int) ev.getRawX();
+                downY = (int) ev.getRawY();
+                canSwipe = downX <= viewWidth / 2;
+                if (!canSwipe) {
+                    return super.onInterceptTouchEvent(ev);
+                }
+                break;
+            case MotionEvent.ACTION_MOVE:
+                if (!canSwipe) {
+                    return super.onInterceptTouchEvent(ev);
+                }
+                int moveX = (int) ev.getRawX();
+                // 满足此条件屏蔽SildingFinishLayout里面子类的touch事件
+                if (moveX - downX > mTouchSlop
+                        && Math.abs((int) ev.getRawY() - downY) < mTouchSlop) {
+                    return true;
+                }
+                break;
+        }
+        return super.onInterceptTouchEvent(ev);
+    }
+```
+在手指按下的时候相较于 onTouchEvent() 方法 onInterceptTouchEvent() 方法会先执行，在此方法中先判断当前触摸是否为 ViewPager，是 ViewPager 则判断是否滑动到了 ViewPager 的最左侧。如果触摸的 ViewPager 且未滑动到最左侧则不对事件进行拦截交给 ViewPager 处理触摸事件，否则触摸位置进行判断，在有效区域内则记录触摸开始点，否则按系统默认方式处理。在移动事件中会根据按下事件的判断结果决定是否按默认方式处理，当需要处理侧滑时会再次判断如果 X 方向的滑动大于最小有效滑动距离 Y方向滑动距离小于最小有效滑动距离则此次事件将会被 SwipeBackLayout 所消费，将进入 SwipeBackLayout 的 onTouchEvent() 方法中的处理逻辑。
+``` java
+    @Override
+    public boolean onTouchEvent(MotionEvent event) {
+        switch (event.getAction()) {
+            case MotionEvent.ACTION_MOVE:
+                if (!canSwipe) {
+                    return super.onInterceptTouchEvent(event);
+                }
+                int moveX = (int) event.getRawX();
+                int deltaX = tempX - moveX;
+                tempX = moveX;
+                if (moveX - downX > mTouchSlop
+                        && Math.abs((int) event.getRawY() - downY) < mTouchSlop) {
+                    isSilding = true;
+                }
+                if (moveX - downX >= 0 && isSilding) {
+                    //deltaX 为单次移动的距离向右滑为负数
+                    // TODO: 2017/6/22 实现 y 方向的移动，即向右任意方向滑出界面
+                    mContentView.scrollBy(deltaX, 0);
+                }
+                break;
+            case MotionEvent.ACTION_UP:
+                if (!canSwipe) {
+                    return super.onInterceptTouchEvent(event);
+                }
+                isSilding = false;
+                if (mContentView.getScrollX() <= -viewWidth / 4) {
+                    isFinish = true;
+                    scrollRight();
+                } else {
+                    scrollOrigin();
+                    isFinish = false;
+                }
+                break;
+        }
+        return true;
+    }
+```
+同样此方法中也会根据 onInterceptTouchEvent() 中的 DOWN 事件的判定结果 canSwipe 来决定是否按默认方式消费事件，MOVE 事件中如果满足侧滑条件则会调用 scrollBy() 将 mContentView 按滑动方向进行移动，而此处的 mContentView 即是 SwipeBackLayout 自身，因此整个显示的界面会被按照滑动方向移动。当手指抬起时如果滑动距离超过 1/4 界面宽度（可以按自己需求调整），则视为侧滑返回完成，让 Scroller 自动完成剩余距离的滑动，否则让 Scroller 恢复到滑动起始位置
+``` java
+    /**
+     * 滚动出界面
+     */
+    private void scrollRight() {
+        final int delta = (viewWidth + mContentView.getScrollX());
+        // 调用startScroll方法来设置一些滚动的参数，我们在computeScroll()方法中调用scrollTo来滚动item
+        mScroller.startScroll(mContentView.getScrollX(), 0, -delta + 1, 0,
+                Math.abs(delta));
+        postInvalidate();
+    }
 
-## ViewPager 滑动冲突的处理
+    /**
+     * 滚动到起始位置
+     */
+    private void scrollOrigin() {
+        int delta = mContentView.getScrollX();
+		        // 调用startScroll方法来设置一些滚动的参数，我们在computeScroll()方法中调用scrollTo来滚动item
+        mScroller.startScroll(mContentView.getScrollX(), 0, -delta, 0,
+                Math.abs(delta));
+        postInvalidate();
+    }
+	
+	/**
+     * 具体执行 Scroller 中的滚动及将滑动距离传递给外部接口
+     */
+	 @Override
+    public void computeScroll() {
+        Log.i("computeScroll","computeScroll");
+        if (mSwipeListener != null) {
+            double scrollx = Math.abs(mContentView.getScrollX());
+            double offset = scrollx / viewWidth;
+            if (offset > 0.9) {
+                offset = 1d;
+            }
+            mSwipeListener.swipeValue(offset);
+        }
+        if (mScroller.computeScrollOffset()) {
+            Log.i("computeScroll","mScroller");
+            mContentView.scrollTo(mScroller.getCurrX(), mScroller.getCurrY());
+            postInvalidate();
+            if (mScroller.isFinished() && isFinish) {
+                mActivity.finish();
+            }
+        }
+    }
+```
+# 结语
+以上就是简化后的侧滑返回的基本使用和原理的简单分析，完整代码可以参考 [PandaEye][5]欢迎 Star。文章一遍过为反复检查如有不妥之处欢迎大家踊跃交流。
 
 
   [1]: https://github.com/ikew0ng/SwipeBackLayout
   [2]: http://oddbiem8l.bkt.clouddn.com/ViewTree.png
   [3]: http://oddbiem8l.bkt.clouddn.com/%E6%99%AE%E9%80%9ADecorView.jpg
   [4]: http://oddbiem8l.bkt.clouddn.com/%E4%BE%A7%E6%BB%91%E8%BF%94%E5%9B%9EDecorView.jpg
+  [5]: https://github.com/PandaQAQ/PandaEye
