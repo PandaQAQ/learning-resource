@@ -54,7 +54,8 @@ WebSetting 是为 WebView 提供配置和管理的一个抽象类，它通过 we
 // 设置 webView 是否支持 JavaScript 的调用（应用中涉及原生与 JS 交互的必须设置为 true）
 webSettings.setJavaScriptEnabled(true);
 
-// 设置是否允许 JS 开启窗口
+// 设置是否允许 JS 开启新窗口(function window.open())
+webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 
 // 设置 webView 是否支持插件
 webSettings.setPluginsEnable(true);
