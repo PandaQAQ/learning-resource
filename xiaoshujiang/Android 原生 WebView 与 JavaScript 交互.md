@@ -6,7 +6,7 @@ Android 原生中加载网页的控件是 WebView，因此要想原生与 JavaSc
 # 相关类和主要方法
 ## WebView
 低版本和高版本的 Android 系统中 WebView 采用不同的内核， Android 4.4 之后直接使用了 Chrome 的内核。
-### WebView 的常用方法
+**常用方法：**
 ``` java
 //根据 url 去加载一个网页
 webView.loadUrl(String url);
@@ -49,7 +49,7 @@ webView.goBackOrForward(int steps);
 ```
 ## WebSetting
 WebSetting 是为 WebView 提供配置和管理的一个抽象类，它通过 webView.getSettings() 方法获取实例。
-###  WebSetting 的常用方法
+**常用方法：**
 ``` java
 // 设置 webView 是否支持 JavaScript 的调用（应用中涉及原生与 JS 交互的必须设置为 true）
 webSettings.setJavaScriptEnabled(true);
@@ -59,6 +59,8 @@ webSettings.setJavaScriptCanOpenWindowsAutomatically(true);
 
 // 设置 webView 是否支持插件
 webSettings.setPluginsEnable(true);
+
+// 设置编码方式
 
 // 设置是否自适应屏幕，（一般图片和网页缩放同时使用）
 webSettings.setUseWideViewPort(true); //将图片调整到适合 webView 的大小
@@ -70,10 +72,52 @@ webSettings.setSupportZoom(true);
 webSettings.setBuiltInZoomControls(true);
 // 隐藏原生的缩放控件
 webSettings.setDisplayZoomControls(true);
-
-
 ```
-## WebClient
+## WebViewClient
+WebViewClient 主要用来帮助 WebView 处理请求的各种状态事件。
+**常用方法：**
+``` java
+// 页面开始加载的时候回调
+onPageStarted(WebView view, String url, Bitmap favicon);
+// 页面加载结束时回调
+onPageFinished(WebView view, String url)；
+// 将要加载资源时回调，每次资源的加载都会调用
+onLoadResource(WebView view, String url);
+// 加载的页面 404 时将会回调
+onReceivedError(WebView view, WebResourceRequest request, WebResourceError error);
+```
+webView 默认情况下是不会加载 https 请求的，页面将显示空白，如果加载 https 页面需要进行如下设置：
+``` java 
+webView.setWebViewClient(new WebViewClient() {    
+        @Override    
+        public void onReceivedSslError(WebView view, SslErrorHandler handler, SslError error) {    
+            handler.proceed();    //表示等待证书响应
+        // handler.cancel();      //表示挂起连接，为默认方式
+        // handler.handleMessage(null);    //可做其他处理
+        }    
+    });
+```
 ## WebChromeClient
-# 原生调用 JS
-# JS 调用原生方法
+辅助 WebView 处理 JavaScript 对话框，加载进度，网页图标等。
+**常用方法：**
+``` java
+// 加载进度回调
+onProgressChanged(WebView view, int newProgress);
+// 获取到网页 Title 回调
+onReceivedTitle(WebView view, String title);
+// 获取到网页图标回调
+onReceivedIcon(WebView view, Bitmap icon);
+```
+# WebView 的使用
+通过前面的了解，WebView 及他的辅助类的一些基本方法我们是知道了，接下来就看一下一下怎么使用 WebView 以及怎样通过 WebView 让 Android 源生代码与 JavaScript 代码进行交互。
+## JS 调用原生方法
+JS 调用源生的方法时该方法必须要加上 @JavascriptInterface 注解，我们可以定义一个类或者接口来单独存放用于 JS 调用的方法，这里我以接口为例。接口中提供一个 getUrl(String url) 方法用于提供给 JS 调用，传递一个 String 类型的值给源生方法：
+``` java
+// 接口中定义方法时不用加注解，使用时才加注解
+public interface JavaScriptFunction {
+    void getUrl(String string);
+}
+```
+
+## 原生调用 JS
+# 利用 Chrome 调试 WebView
