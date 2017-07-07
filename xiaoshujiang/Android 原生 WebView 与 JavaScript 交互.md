@@ -113,11 +113,73 @@ onReceivedIcon(WebView view, Bitmap icon);
 ## JS 调用原生方法
 JS 调用源生的方法时该方法必须要加上 @JavascriptInterface 注解，我们可以定义一个类或者接口来单独存放用于 JS 调用的方法，这里我以接口为例。接口中提供一个 getUrl(String url) 方法用于提供给 JS 调用，传递一个 String 类型的值给源生方法：
 ``` java
-// 接口中定义方法时不用加注解，使用时才加注解
+/**
+ * Created by PandaQ on 2017/3/22.
+ * JS 接口方法定义
+ * 接口中定义方法时不用加注解，使用时才加注解
+ */
 public interface JavaScriptFunction {
     void getUrl(String string);
 }
 ```
-
+``` java
+// 此代码片段为 PandaEye 中点击加载的 html 数据中的图片跳转到新的 Activity 显示图片的功能
+webView.addJavascriptInterface(new JavaScriptFunction() {
+            @Override
+            @JavascriptInterface // 加上注解 getUrl() 方法才能被 JS 调用
+            public void getUrl(String imageUrl) {
+                LogWritter.LogStr(imageUrl);
+                Intent intent = new Intent();
+                intent.putExtra("imageUrls", mImageUrls);
+                intent.putExtra("curImageUrl", imageUrl);
+                intent.setClass(ZhihuStoryInfoActivity.this, PhotoViewActivity.class);
+                startActivity(intent);
+            }
+        }, "JavaScriptFunction");
+```
+``` javascript
+// 在 HTML 中图片的点击事件 JS 方法中就可以执行如下代码来调用源生的接口方法
+function(){
+	window.JavaScriptFunction.getUrl(this.src);
+}
+```
 ## 原生调用 JS
+在熊猫眼 [PandaEye][1] 中因为使用的知乎日报和网易新闻的 API 所以下发的 HTML body 数据需要我们自己加个 HTML 的壳，然后再源生加载我们需要的 JavaScrpit 代码来实现我们的功能。
+加载 JS 可以直接 webView.load() 加载完整的 JS 代码也可以在自己加的 head 节点引入 JS 文件然后 webView 直接 load 其中的方法， [PandaEye][2] 中使用的是第二种方法：
+在拼装 HTML 时在 head 中引入放在 asset 文件夹中的 js 文件
+
+![enter description here][3]
+
+imageClick.js 中的内容如下：
+``` javascript
+function initClick()
+{
+    var objects = document.getElementsByTagName("img");
+    for(var i=0;i<objects.length;i++)
+    {
+        objects[i].onclick= function (){
+            window.JavaScriptFunction.getUrl(this.src);
+        }
+    }
+}
+```
+然后在 WebChromeClient 当加载进度达到 100% 后去调用 JS 文件中的 initClick() 方法，为每一张图片设置点击事件：
+``` java
+    /**
+     * 为所有的图片添加点击事件
+     *
+     * @param webView 对应的 WebView
+     */
+    private void addImageClickListener(WebView webView) {
+        webView.loadUrl("javascript:(initClick())()");
+    }
+```
+直接加载 JS 把 initClick() 用 JS 代码替换掉即可。
 # 利用 Chrome 调试 WebView
+WebView 中 JavaScript 代码的调试直接使用 AndroidStudio 是没办法的，那么我们怎样调试 HTML 页面呢？答案是用 Chrome 浏览器来调试：
+- USB 选项是打开的（AS 能调试应用就行）
+- Chrome 浏览器打开地址：
+
+  [1]: https://github.com/PandaQAQ/PandaEye
+  [2]: https://github.com/PandaQAQ/PandaEye
+  [3]: http://oddbiem8l.bkt.clouddn.com/htmlcore.png
