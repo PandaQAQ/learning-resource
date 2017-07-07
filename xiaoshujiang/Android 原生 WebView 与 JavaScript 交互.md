@@ -178,8 +178,20 @@ function initClick()
 # 利用 Chrome 调试 WebView
 WebView 中 JavaScript 代码的调试直接使用 AndroidStudio 是没办法的，那么我们怎样调试 HTML 页面呢？答案是用 Chrome 浏览器来调试：
 - USB 选项是打开的（AS 能调试应用就行）
-- Chrome 浏览器打开地址：
+- Chrome 浏览器打开地址：chrome://inspect 或者 about:inspect
+打开待调试的 WebView 然后可以看到如下界面：
+
+![InspectPage][4]
+点击对应页面的 inspect 就可以进入调试页面：
+
+![DebugPage][5]
+接下里就可以像调试前端页面一样调试 WebView 中的内容了。
+
+# 最后
+详细使用代码请移步  [PandaEye][1] 查看
 
   [1]: https://github.com/PandaQAQ/PandaEye
   [2]: https://github.com/PandaQAQ/PandaEye
   [3]: http://oddbiem8l.bkt.clouddn.com/htmlcore.png
+  [4]: http://oddbiem8l.bkt.clouddn.com/inspect.png
+  [5]: http://oddbiem8l.bkt.clouddn.com/page.png
