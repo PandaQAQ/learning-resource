@@ -267,7 +267,7 @@ private boolean isSoftShowing() {
         return view.getDrawingCache();
     }
 ```
-**选择 Bitmap 图片**
+**旋转 Bitmap 图片**
 ``` java
     /**
      * bitmap 旋转
