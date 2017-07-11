@@ -211,3 +211,36 @@ Android 禁用系统截屏（敏感信息页面禁用截屏）
 ``` java
 getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
 ```
+判断软键盘是否弹出。实现思路：判断当前界面可见区域高度是否跟 DecorView 相等（带软键盘的要减去虚拟按键高度）
+``` java
+private boolean isSoftShowing() {  
+       //获取当前屏幕内容的高度  
+       int screenHeight = getWindow().getDecorView().getHeight();  
+       //获取View可见区域的bottom  
+       Rect rect = new Rect();  
+       getWindow().getDecorView().getWindowVisibleDisplayFrame(rect);  
+       //return screenHeight - rect.bottom != 0;  //无虚拟按键
+	   return screenHeight-rect.bottom-getSoftButtonsBarHeight() !=0;
+   } 
+```
+``` java
+/** 
+   * 底部虚拟按键栏的高度 
+   * @return 
+   */  
+  @TargetApi(Build.VERSION_CODES.JELLY_BEAN_MR1)  
+  private int getSoftButtonsBarHeight() {  
+      DisplayMetrics metrics = new DisplayMetrics();  
+      //这个方法获取可能不是真实屏幕的高度  
+      mActivity.getWindowManager().getDefaultDisplay().getMetrics(metrics);  
+      int usableHeight = metrics.heightPixels;  
+      //获取当前屏幕的真实高度  
+      mActivity.getWindowManager().getDefaultDisplay().getRealMetrics(metrics);  
+      int realHeight = metrics.heightPixels;  
+      if (realHeight > usableHeight) {  
+          return realHeight - usableHeight;  
+      } else {  
+          return 0;  
+      }  
+  } 
+```
