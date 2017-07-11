@@ -1,9 +1,7 @@
 ---
 title: Android小知识记录
 ---
-
-1.打开新的工程构建太久，可现在Gradle配置文件中将Gradle的版本号改成能快速打开的工程中的相同版本号，然后再打开该工程。
-2.Android5.0及以上的水波纹效果，在资源文件中创建ripple 的xml文件
+**Android5.0及以上的水波纹效果，在资源文件中创建ripple 的xml文件**
 
 ``` xml
 <?xml version="1.0" encoding="utf-8"?>
@@ -21,7 +19,7 @@ title: Android小知识记录
 在需要用水波纹的控件中设置background为此文件。ripple中可以通过item为背景设置其他属性如颜色圆角等。
 这需要API 21及以上才支持，因为ripple是API21才添加的属性，更低版本需要水波纹效果则需要通过canvas绘制。
 
-### Transition
+**Transition**
 Android5.1之后的activity和Fragment的变换都是建立在Transition上的。transition框架为在不同的UI状态之间产生动画效果提供了非常方便的API。该框架主要基于两个概念：场景（scenes）和变换（transitions）。场景（scenes）定义了当前的UI状态，变换（transitions）则定义了在不同场景之间动画变化的过程。
 
 当一个场景改变的时候，transition主要负责：
@@ -30,7 +28,7 @@ Android5.1之后的activity和Fragment的变换都是建立在Transition上的�
 
 （2）根据两个场景（开始和结束）之间的区别创建一个Animator。
 
-### 获取大型网站的时间戳（获取网络时间）
+**获取大型网站的时间戳（获取网络时间）**
 ``` java
     public static long getNetWorkTime() {
         try {
@@ -50,7 +48,7 @@ Android5.1之后的activity和Fragment的变换都是建立在Transition上的�
         }
     }
 ```
-### SP DP 跟PX的转换
+**SP DP 跟PX的转换**
 ``` java
 /** 
      * dp、sp 转换为 px 的工具类 
@@ -149,7 +147,7 @@ oncreate 中获取控件宽高：
             }
         });
 		
-# bitmap 图片转换方法
+**bitmap 图片转换方法**
 ``` java
 	public Bitmap getCircleBitmap(Bitmap bitmap, int bitmapSize) {
         //前面同上，绘制图像分别需要bitmap，canvas，paint对象
@@ -172,12 +170,11 @@ oncreate 中获取控件宽高：
 	
 ![enter description here][1]
 
-BottomSheetBehavior 需要在初始化的时候设置高度，否则不会有任何效果。再通过dispatchOntouchEvent 中判断滑动状态决定是否隐藏
-  [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
+**BottomSheetBehavior 需要在初始化的时候设置高度，否则不会有任何效果。再通过dispatchOntouchEvent 中判断滑动状态决定是否隐藏**
   
-BroadCastReceiver 静态注册后要在应用停止后还监听广播需要在发送时设置 Flag FLAG_INCLUDE_STOPPED_PACKAGES;
+**BroadCastReceiver 静态注册后要在应用停止后还监听广播需要在发送时设置 Flag FLAG_INCLUDE_STOPPED_PACKAGES;**
 
-YUV图像数组转Bitmap
+**YUV图像数组转Bitmap**
 ``` java
 public Bitmap rawByteArray2RGBABitmap2(byte[] data, int width, int height) {  
         int frameSize = width * height;  
@@ -207,11 +204,12 @@ public Bitmap rawByteArray2RGBABitmap2(byte[] data, int width, int height) {
     }  
 
 ```
-Android 禁用系统截屏（敏感信息页面禁用截屏）
+**Android 禁用系统截屏（敏感信息页面禁用截屏）**
 ``` java
 getWindow().addFlags(WindowManager.LayoutParams.FLAG_SECURE);
 ```
-判断软键盘是否弹出。实现思路：判断当前界面可见区域高度是否跟 DecorView 相等（带软键盘的要减去虚拟按键高度）
+**判断软键盘是否弹出**
+实现思路：判断当前界面可见区域高度是否跟 DecorView 相等（带软键盘的要减去虚拟按键高度）
 ``` java
 private boolean isSoftShowing() {  
        //获取当前屏幕内容的高度  
@@ -222,8 +220,7 @@ private boolean isSoftShowing() {
        //return screenHeight - rect.bottom != 0;  //无虚拟按键
 	   return screenHeight-rect.bottom-getSoftButtonsBarHeight() !=0;
    } 
-```
-``` java
+   
 /** 
    * 底部虚拟按键栏的高度 
    * @return 
@@ -243,4 +240,12 @@ private boolean isSoftShowing() {
           return 0;  
       }  
   } 
+  
+  private void hideKeyBord(){
+  	  InputMethodManager imm = (InputMethodManager)  
+         getSystemService(Context.INPUT_METHOD_SERVICE);  
+         imm.hideSoftInputFromWindow(v.getWindowToken(), 0); 
+  }
 ```
+
+  [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
