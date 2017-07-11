@@ -111,11 +111,11 @@ Android5.1之后的activity和Fragment的变换都是建立在Transition上的�
     }  
 ```
 
-打包使用图片时 出现ide common。。。。debugresouce的错误时注意检查图片格式
+**打包使用图片时 出现ide common。。。。debugresouce的错误时注意检查图片格式**
 
-textview 设置 singleLine = true   ellipsize = marquee 可以实现跑马灯显示较长的文字。 android:marqueeRepeatLimit  为循环次数，可无限循环。
+**textview 设置 singleLine = true   ellipsize = marquee 可以实现跑马灯显示较长的文字。 android:marqueeRepeatLimit  为循环次数，可无限循环。**
 
-RecyclerView 删除Item后只使用notifyItemRemoved() 删除了，但是省下的item position还是没改变。需要刷新ViewHolder 或调用notifyItemRangeChanged(position, mDevices.size() - position);
+**RecyclerView 删除Item后只使用notifyItemRemoved() 删除了，但是剩下的item position还是没改变。需要刷新ViewHolder 或调用notifyItemRangeChanged(position, mDevices.size() - position);**
 
 static 变量只会加载一次，程序结束静态内存区才会消失。
 static 变量共享静态内存，当一个地方改变该变量的值的时候，其他引用该变量的值也会被改变。
@@ -129,9 +129,9 @@ RxAndroid 解绑后再次调用会出现 结果无法获取，例如在 fragment
 出现上面问题的原因：
 统一使用的 CompositeSubscription 在解绑之后需要创建新的实例，如果 CSb自己都处于未绑定状态自然也就没法让 subcriber绑定观察者
 
-ScrollView 中元素设置么 marginTop 会导致不能滚动到底部 mScrollView.smoothScrollTo(0,0)；
+**ScrollView 中元素设置么 marginTop 会导致不能滚动到底部 mScrollView.smoothScrollTo(0,0)；**
 
-oncreate 中获取控件宽高：
+**oncreate 中获取控件宽高：**
         ViewTreeObserver vto = ssidtext.getViewTreeObserver();
         vto.addOnPreDrawListener(new ViewTreeObserver.OnPreDrawListener() {
             public boolean onPreDraw() {
@@ -246,6 +246,45 @@ private boolean isSoftShowing() {
          getSystemService(Context.INPUT_METHOD_SERVICE);  
          imm.hideSoftInputFromWindow(v.getWindowToken(), 0); 
   }
+```
+**获取一个 View 或者 ViewGroup 的 Bitmap 信息**
+``` java
+    /**
+     * 将view生成bitmap
+     *
+     * @param view
+     * @param width
+     * @param height
+     * @return
+     */
+    public static Bitmap getBitmap(View view, int width, int height) {
+        view.setDrawingCacheEnabled(true);
+        view.measure(
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED),
+                View.MeasureSpec.makeMeasureSpec(0, View.MeasureSpec.UNSPECIFIED));
+        view.layout(0, 0, width, height);
+        view.buildDrawingCache();
+        return view.getDrawingCache();
+    }
+```
+**选择 Bitmap 图片**
+``` java
+    /**
+     * bitmap 旋转
+     *
+     * @param bm
+     * @param orientationDegree
+     * @return
+     */
+    private static Bitmap adjustPhotoRotation(Bitmap bm, final int orientationDegree) {
+        Matrix m = new Matrix();
+        m.setRotate(orientationDegree, (float) bm.getWidth() / 2, (float) bm.getHeight() / 2);
+        try {
+            return Bitmap.createBitmap(bm, 0, 0, bm.getWidth(), bm.getHeight(), m, true);
+        } catch (OutOfMemoryError ex) {
+            return null;
+        }
+    }
 ```
 
   [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
