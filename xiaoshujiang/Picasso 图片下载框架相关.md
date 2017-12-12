@@ -11,4 +11,3 @@ title: Picasso 图片下载框架相关
 - Builder 中设置 RequestTransformer 来修改每次请求的信息，比如说加 header 验证什么的
 - 当一个加载目标是弱可及的但是加载请求又没被取消时将会被加入到引用队列。Picasso 有一个 CleanupThread 可手动调用清除队列并取消请求
 - 调用 load 的时候会返回一个 RequestCreator 类来创建请求
-- 
