@@ -3,6 +3,8 @@ title: Android小知识记录
 ---
 **Android5.0及以上的水波纹效果，在资源文件中创建ripple 的xml文件**
 
+token ：835b2248fdbad2bb543df3134b001079bbe3737b
+
 ``` xml
 <?xml version="1.0" encoding="utf-8"?>
 <ripple xmlns:android="http://schemas.android.com/apk/res/android"
@@ -286,5 +288,8 @@ private boolean isSoftShowing() {
         }
     }
 ```
+**布局性能优化相关**
+1、当布局只会作为 include 引入父布局时在不影响显示的情况下可使用` <merge/>`标签代替根布局节点，在合并时 ` <merge/>` 标签将会自动被忽略
+2、使用 ViewStub ***(要代替的布局中不能包含 `<merge/>`)***
 
   [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
