@@ -288,6 +288,8 @@ private boolean isSoftShowing() {
         }
     }
 ```
+**多 module 混淆规则配置**
+<span style="border-bottom:2px solid red;">子模块混淆文件的指定是通过consumerProguardFiles这个属性来指定的，并不是proguardFiles 属性，而且我们无需配置其他的选项，只需要配置consumerProguardFiles属性就可以。该属性表示在打包的时候会自动寻找该module下我们指定的混淆文件对代码进行混淆。</span>
 **布局性能优化相关**
 1、当布局只会作为 include 引入父布局时在不影响显示的情况下可使用` <merge/>`标签代替根布局节点，在合并时 ` <merge/>` 标签将会自动被忽略
 2、使用 ViewStub ***(要代替的布局中不能包含 `<merge/>`)***
