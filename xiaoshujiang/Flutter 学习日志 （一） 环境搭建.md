@@ -29,7 +29,7 @@ export FLUTTER_STORAGE_BASE_URL=https://storage.flutter-io.cn
 # Run First Flutter App
 打开 AndroidStudio 跟以往创建 Android 工程一样，new project 选项多了一个 new Flutter project 选项。选择创建 flutter project 选择 flutter application 。一路点到底，最后一步可选择 kotlin （Android）或者 swift （ios）支持。直接点击运行或者在 AndroidStudo 终端输入 flutter run 都可以在设备上运行 flutter 应用。
 
-![example flutter](http://oddbiem8l.bkt.clouddn.com/S80712-00123214.jpg)
+![example flutter](http://oddbiem8l.bkt.clouddn.com/flutter_example.png)
 运行阶段对 flutter 工程中的代码修改后直接在命令行按 `r` 可直接热更生效。debug 模式下 flutter 界面的右上角会有一个 debug 的标记，debug 模式下的运行性能会比 release 模式低很多。在已有 Android/ios 项目中将 flutter 以 FlutterView 添加到界面时，debug 模式下界面初始化时会明显黑屏，release 模式则比较流畅。
 # 总结
 flutter 的环境配置相对来说还是比较简单的，只要处理好初始化时网络环境的问题，按照官方文档的步骤（`windows 镜像配置注意通过环境变量配置`）还是比较顺利的。直接从头到尾创建一个 flutter 应用非常简单，但是纯 flutter 应用并不能满足所有的需求。项目中期如果想集成 flutter 总不可能推掉重来吧，所以在现有的 Android/ios 项目中集成使用 flutter 是很有必要的。这几天了解下来，感觉相关的文档还不是太完善，拼拼凑凑用起来坑也比较多，后面也会以文章的方式记录下来。希望官方后面会加强这方面的支持吧，把在现有项目中集成混合使用的成本降低开发者才更容易接受啊。
