@@ -3,4 +3,69 @@ title: Flutter 学习日志 （二） 现有项目集成 flutter
 ---
 
 本文主要介绍怎样在现有的 Android 项目中集成 flutter 开发界面，以及 flutter 与原生之间怎样进行方法互调、数据双向传递
+# 依赖集成
+官方目前没有正式的集成文档，只有一个 github 上的 [wiki](https://github.com/flutter/flutter/wiki/Add-Flutter-to-existing-apps#experiment-turn-the-flutter-project-into-a-module) 页面做了相关介绍。原因嘛，看了 wiki 就知道了
+
+>This page documents ongoing experiments and will be updated as we find more and better ways to do this, and as we build out tooling to aid.
+
+>This support is in preview, and is generally only available in the master channel.
+
+目前现有工程集成 flutter 还处在开发探索阶段，给出的集成方式也需要切换 flutter SDK 分支到 master 才支持。
+
+## 注意
+在现有的 Android 项目中集成 flutter 是以 module 的方式依赖到项目中。但 flutter 项目是创建在` Android 工程的同级目录下`的，而不是像一般 Android lib module 一样跟 app module 在同级目录,譬如要为 `D:\AndroidSpace\xxx\AndroidProject`工程集成 flutter 则 flutter module 也需要创建在 `D:\AndroidSpace\xxx\` 目录下。
+## 集成步骤
+1、命令行/powershell 进入到 Android 工程所在的目录，即上文举例中的 `xxx` 目录，执行 flutter 命令创建 flutter module。
+```cmd
+flutter create -t module flutter_module
+```
+2、待创建完毕后，打开 Android Project 的 `setting.gradle` 文件，添加如家代码
+``` groovy
+setBinding(new Binding([gradle: this]))                       
+evaluate(new File( 
+        settingsDir.parentFile,
+        'flutter_check/.android/include_flutter.groovy'
+))
+```
+3、同步设置后在 app gradle 中添加依赖(`flutter 中的 support 包可能会有依赖冲突，加入 exclude 排除掉 support 包依赖即可解决`)
+``` groovy
+dependencies {
+    ...
+    implementation(project(':flutter'),{
+        exclude group: 'com.android.support'
+    })
+	...
+```
+4、经过上面的配置 flutter 已经集成到现有 Android 工程中了，可以将 flutter 页面当做 View 添加到原生界面上，并在界面的生命周期函数中调用 FlutterView 的对应生命周期方法。也可以创建一个 FlutterFragment 显示在界面上，由 Flutter 自行处理生命周期相关问题。
+- 添加 flutterview 方式
+```java
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+		...
+        FrameLayout.LayoutParams layout = new FrameLayout.LayoutParams(FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT);
+        flutterView = Flutter.createView(this, getLifecycle(), "PhoneCheck");
+        addContentView(flutterView, layout);
+		...
+    }
+``` 
+- FlutterFragment 方式
+```java
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_flutter_test);
+		...
+        FragmentTransaction tx = getSupportFragmentManager().beginTransaction();
+        tx.replace(R.id.fl_flutter_container, Flutter.createFragment("PhoneCheck"));
+        tx.commit();
+		...
+    }
+```
+当然，上面两种方式不是必须在 oncreate 中调用，当做普通的 View / fragment 在合适的地方使用就行。使用 Flutterfragment 时如果需要 flutter 与原生间进行通信则需要继承 Flutterfragment 重新 `onCreateView()` 拿到自动创建的 FlutterView 对象。因为初始化通信信道时需要用到 FlutterView 对象。另外在使用时还遇到了 `getLifecycle()` 方法找不到的问题，原因是 Android 工程的 `buildToolsVersion` 太低，之前是 25 后面改成 27 的就解决了。
+
+# Flutter 与原生的方法互调及数据传递
+通过上面的步骤，flutter 页面是可以嵌入显示在原生应用上了。但现阶段还是各显示各的互不交流，这显然是不满足需求的。好在 Flutter 为我们提供了通信的桥梁，Flutter 与原生的通信通过两个类型的 Channel 来实现。即通过反射进行方法调用的 `MethodChannel` 和将数据转换成二进制比特数组直接传递的 `BasicMessageChannel` 。
+
 
