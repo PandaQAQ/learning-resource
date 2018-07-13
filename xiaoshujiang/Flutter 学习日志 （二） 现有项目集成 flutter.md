@@ -157,6 +157,7 @@ flutter 中的 methodHandler 接收到方法调用，再做相关处理。与 fl
 
 ##注意事项
 - MethodChannel 初始化时，指定的 `channelName` 参数，如上面代码片段中的`my_flutter/plugin`。需要 flutter 端与原生平台端一致，才能保证 Channel 信道一致，互相接收到对放发送的方法调用请求。
+- 参数传递时，传递的参数为基本数据类型或者 Map List 之类的双方都能识别的类型，自定义数据类转换成 map 或者 json 字符串再传递。当 flutter 传递的参数为 json对象（内部也是转成 map 传递的） 或者 map 时可以在原生中可以直接使用 `methodCall.argument("key");`获取参数值，获取前可以使用 `methodCall.hasArgument("key");`判断参数是否存在。
 
 ## BasicMessageChannel
 BasicMessageChannel 是 Flutter 与平台原生直接发送和接收数据的插件，数据以二进制的形式在其中传输。
