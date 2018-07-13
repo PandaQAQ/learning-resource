@@ -163,4 +163,15 @@ flutter 中的 methodHandler 接收到方法调用，再做相关处理。与 fl
 
 ## BasicMessageChannel
 BasicMessageChannel 是 Flutter 与平台原生直接发送和接收数据的插件，数据以二进制的形式在其中传输。
-基本步骤和 MethodChannel 一致，在 flutter 端和平台端都实例化对象并设置回调，
+基本步骤和 MethodChannel 一致，在 flutter 端和平台端都实例化对象并设置回调，与 MethodChannel 初始化不同之处在于初始化时多了一个类型参数，因为 BasicMessageChannel 本身是可以传入泛型的，因此在初始化时需要指定泛型类型。其实打开 `MethodChannel` 的初始化方法会发现，内部也是传入了类型的，只不过使用的默认值 `StandardMethodCodec.INSTANCE`。具体有哪些类型实现，打开 project 依赖目录找到 flutter.jar 其中的 `io.flutter.common` 包中可以看到
+
+| Class          | Note                         |
+| -------------------- | ------------------------------------------------------------ |
+| BinaryCodec          | 二进制数据类型，泛型对应 ByteBuffer,传递 byte 数组时使用                          |
+| JSONMessageCodec     | Json消息类型，泛型对应 Object。传递 Json时可使用                                  |
+| StringCodec          | 字符串消息类型，泛型对应 String。传递字符串                  |
+| StandardMessageCodec | 标准消息类型，泛型对应 Object。传递 Map 等的时候可使用此类型 |
+Flutter 中对应 class 在 `flutter\src\services\message_codecs.dart` 文件中。
+# 总结
+本文只是记录对照官方文档上手在 demo 中实践的心得，可能会理解有所偏差。待深入研究再进行纠正。flutter 与原生平台通信主要通过三个默认的 Channel ，除了上面说到的 `MethodChannel`、`BasicMessageChannel`还有一个 `EventChannel`具体可以看一下[这篇文章](https://blog.csdn.net/johnwcheung/article/details/79180732)。
+ 
