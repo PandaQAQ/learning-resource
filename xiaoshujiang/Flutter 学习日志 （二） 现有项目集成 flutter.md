@@ -66,6 +66,97 @@ dependencies {
 当然，上面两种方式不是必须在 oncreate 中调用，当做普通的 View / fragment 在合适的地方使用就行。使用 Flutterfragment 时如果需要 flutter 与原生间进行通信则需要继承 Flutterfragment 重新 `onCreateView()` 拿到自动创建的 FlutterView 对象。因为初始化通信信道时需要用到 FlutterView 对象。另外在使用时还遇到了 `getLifecycle()` 方法找不到的问题，原因是 Android 工程的 `buildToolsVersion` 太低，之前是 25 后面改成 27 的就解决了。
 
 # Flutter 与原生的方法互调及数据传递
-通过上面的步骤，flutter 页面是可以嵌入显示在原生应用上了。但现阶段还是各显示各的互不交流，这显然是不满足需求的。好在 Flutter 为我们提供了通信的桥梁，Flutter 与原生的通信通过两个类型的 Channel 来实现。即通过反射进行方法调用的 `MethodChannel` 和将数据转换成二进制比特数组直接传递的 `BasicMessageChannel` 。
+通过上面的步骤，flutter 页面是可以嵌入显示在原生应用上了。但现阶段还是各显示各的互不交流，这显然是不满足需求的。好在 Flutter 为我们提供了通信的桥梁——平台插件，Flutter 与原生的通信通过两个类型的 Channel 来实现。即通过反射进行方法调用的 `MethodChannel` 和将数据转换成二进制比特数组直接传递的 `BasicMessageChannel` ，且通信都是双向的。
+## MethodChannel
+MethodChannel 是 Flutter 与平台原生进行方法互调的插件，Android 中通过反射实现方法调用。
+### example
+flutter module 对应的 State 中
+``` dart
+	...
+	MethodChannel platform;
+  @override
+  void initState() {
+	...
+    platform = const MethodChannel('my_flutter/plugin');
+    platform.setMethodCallHandler(methodHandler);
+    super.initState();
+	...
+  }
+  
+   // 接收原生平台的方法调用处理
+  Future methodHandler(MethodCall call) async {
+	...
+  }
+```
+初始化 WidgetState 的时候初始化 MethodChannel 并为之设置回调处理方法,回调方法中有参数 MethodCall，可通过 call.method 来判断需要执行的具体操作。
+Android 原生代码
+与 flutter 端一样，也需要先初始化 channel
+```java
+MethodChannel mChannel；
+private void initChannel() {
+        mChannel = new MethodChannel(flutterView, "my_flutter/plugin");
+        
+        mChannel.setMethodCallHandler((MethodCall methodCall, MethodChannel.Result result) -> {
+            switch (methodCall.method) {
+                case "action1":
+                    ...
+                    break;
+                case "action2":
+					...
+                    result.success("jump");
+                    break;
+            }
+        });
+    }
+```
+### 调用方式
+- flutter 端调用原生中的方法：
+//  flutter 中有一个 getheaders 方法，从原生去获取 headers map 对象 
+```dart
+Map<String, String> headers;
+  getHeaders() async {
+    try {
+      Map<dynamic, dynamic> result = await platform.invokeMethod('getHeaders');
+	  // 将 dynamic 类型转换成需要的类型（与平台端返回值给定的类型要一致）
+      headers = result.cast();
+    } on PlatformException catch (e) {
+      print(e.message);
+    }
+  }
+```
+在 flutter 中使用 MethodChannel 对象执行 `invoke（‘methodName’）`即可调用，如方法需要传递参数则调用 `invoke（‘methodName’[dynamic]）`，传递一个 dynamic 类型的参数数组。在原生平台中使用 `methodCall.arguments()`获取参数。 需要返回值则需要添加 await 修饰。原生平台中的 MethodCallHandler 回调就会接收到调用信息,`methodCall.method`值为 flutter 端 invoke 的方法名，result 对象设置的返回值则为 flutter 平台获取到的返回值
+```java
+mChannel.setMethodCallHandler((MethodCall methodCall, MethodChannel.Result result) -> {
+            switch (methodCall.method) {
+                case "action1":
+                    ...
+                    break;
+                case "action2":
+					...
+                    result.success("jump");
+                    break;
+            }
+        });
+```
+- 原生平台调用 flutter 方法
+```java
+//与 flutter 调用原生一样，使用 MethodChannel 的 invoke 方法
+mChannel.invokeMethod("setAddress");
+// 调用并传递参数（参数貌似只能传都能识别的基本数据类型。自定义类用 json 传吧）
+mChannel.invokeMethod("setAddress"，Object);
+```
+```dart
+  Future methodHandler(MethodCall call,) async {
+    print(call.method);
+    if (call.method == 'setAddress') {
+		...
+    }
+  }
+```
+flutter 中的 methodHandler 接收到方法调用，再做相关处理。与 flutter 调用原生不一样，原生调用 fultter 方法是没有返回值的。
 
+##注意事项
+- MethodChannel 初始化时，指定的 `channelName` 参数，如上面代码片段中的`my_flutter/plugin`。需要 flutter 端与原生平台端一致，才能保证 Channel 信道一致，互相接收到对放发送的方法调用请求。
 
+## BasicMessageChannel
+BasicMessageChannel 是 Flutter 与平台原生直接发送和接收数据的插件，数据以二进制的形式在其中传输。
