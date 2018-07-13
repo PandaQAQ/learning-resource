@@ -10,7 +10,7 @@ title: Flutter 学习日志 （二） 现有项目集成 flutter
 
 >This support is in preview, and is generally only available in the master channel.
 
-目前现有工程集成 flutter 还处在开发探索阶段，给出的集成方式也需要切换 flutter SDK 分支到 master 才支持。
+目前现有工程集成 flutter 还处在开发探索阶段。
 
 ## 注意
 在现有的 Android 项目中集成 flutter 是以 module 的方式依赖到项目中。但 flutter 项目是创建在` Android 工程的同级目录下`的，而不是像一般 Android lib module 一样跟 app module 在同级目录,譬如要为 `D:\AndroidSpace\xxx\AndroidProject`工程集成 flutter 则 flutter module 也需要创建在 `D:\AndroidSpace\xxx\` 目录下。
@@ -66,7 +66,9 @@ dependencies {
 当然，上面两种方式不是必须在 oncreate 中调用，当做普通的 View / fragment 在合适的地方使用就行。使用 Flutterfragment 时如果需要 flutter 与原生间进行通信则需要继承 Flutterfragment 重新 `onCreateView()` 拿到自动创建的 FlutterView 对象。因为初始化通信信道时需要用到 FlutterView 对象。另外在使用时还遇到了 `getLifecycle()` 方法找不到的问题，原因是 Android 工程的 `buildToolsVersion` 太低，之前是 25 后面改成 27 的就解决了。
 
 # Flutter 与原生的方法互调及数据传递
-通过上面的步骤，flutter 页面是可以嵌入显示在原生应用上了。但现阶段还是各显示各的互不交流，这显然是不满足需求的。好在 Flutter 为我们提供了通信的桥梁——平台插件，Flutter 与原生的通信通过两个类型的 Channel 来实现。即通过反射进行方法调用的 `MethodChannel` 和将数据转换成二进制比特数组直接传递的 `BasicMessageChannel` ，且通信都是双向的。
+通过上面的步骤，flutter 页面是可以嵌入显示在原生应用上了。但现阶段还是各显示各的互不交流，这显然是不满足需求的。好在 Flutter 为我们提供了通信的桥梁——平台插件，Flutter 与原生的通信通过两个类型的 Channel 来实现。即通过反射进行方法调用的 `MethodChannel` 和将数据转换成二进制比特数组直接传递的 `BasicMessageChannel` ，且通信都是双向的。Channel 支持传输的数据类型有以下：
+
+![enter description here](http://oddbiem8l.bkt.clouddn.com/channel_msg_support.png)，如果需要传递自定义的对象数据等则需要转成 json 字符串或 map 对象传递过去再解析。
 ## MethodChannel
 MethodChannel 是 Flutter 与平台原生进行方法互调的插件，Android 中通过反射实现方法调用。
 ### example
@@ -142,7 +144,7 @@ mChannel.setMethodCallHandler((MethodCall methodCall, MethodChannel.Result resul
 ```java
 //与 flutter 调用原生一样，使用 MethodChannel 的 invoke 方法
 mChannel.invokeMethod("setAddress");
-// 调用并传递参数（参数貌似只能传都能识别的基本数据类型。自定义类用 json 传吧）
+// 调用并传递参数
 mChannel.invokeMethod("setAddress"，Object);
 ```
 ```dart
@@ -161,3 +163,4 @@ flutter 中的 methodHandler 接收到方法调用，再做相关处理。与 fl
 
 ## BasicMessageChannel
 BasicMessageChannel 是 Flutter 与平台原生直接发送和接收数据的插件，数据以二进制的形式在其中传输。
+基本步骤和 MethodChannel 一致，在 flutter 端和平台端都实例化对象并设置回调，
