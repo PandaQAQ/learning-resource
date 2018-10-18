@@ -301,6 +301,11 @@ Only fullscreen opaque activities can request orientation
 1、当布局只会作为 include 引入父布局时在不影响显示的情况下可使用` <merge/>`标签代替根布局节点，在合并时 ` <merge/>` 标签将会自动被忽略
 2、使用 ViewStub ***(要代替的布局中不能包含 `<merge/>`)***
 
+**编译遇到问题**
+AS 终端执行如下命令可编译查看具体错误
+``` cmd
+gradlew compileDebugJavaWithJavac --stacktrace 
+```
 
   [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
   
