@@ -306,6 +306,8 @@ AS 终端执行如下命令可编译查看具体错误
 ``` cmd
 gradlew compileDebugJavaWithJavac --stacktrace 
 ```
+**postDelay()**
+使用 postDelay 延迟调用时一定要注意执行方法中的空指针问题，如果延迟加载时间内页面关闭并回收则会报空指针错误
 
   [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
   
