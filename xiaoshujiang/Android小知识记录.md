@@ -311,3 +311,6 @@ gradlew compileDebugJavaWithJavac --stacktrace
 
   [1]: http://oddbiem8l.bkt.clouddn.com/custom_bitmap.jpg
   
+**注解依赖 annotationProcessor**
+使用 annotationProcessor 注解依赖时必须配置在使用注解的 module 内。否则生成的代码不在对应module内会报空指针
+  
