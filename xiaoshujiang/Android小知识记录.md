@@ -313,4 +313,17 @@ gradlew compileDebugJavaWithJavac --stacktrace
   
 **注解依赖 annotationProcessor**
 使用 annotationProcessor 注解依赖时必须配置在使用注解的 module 内。否则生成的代码不在对应module内会报空指针
-  
+
+**ScrollView 与 WebView 嵌套导致 WebView 显示不完整**
+
+ 给 webview 的父布局添加属性 
+```xml
+android:descendantFocusability="blocksDescendants"
+```
+属性的值有三种：
+
+		 beforeDescendants：viewgroup会优先其子类控件而获取到焦点
+
+        afterDescendants：viewgroup只有当其子类控件不需要获取焦点时才获取焦点
+
+        blocksDescendants：viewgroup会覆盖子类控件而直接获得焦点
