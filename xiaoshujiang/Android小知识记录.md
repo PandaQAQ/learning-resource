@@ -327,3 +327,5 @@ android:descendantFocusability="blocksDescendants"
         afterDescendants：viewgroup只有当其子类控件不需要获取焦点时才获取焦点
 
         blocksDescendants：viewgroup会覆盖子类控件而直接获得焦点
+		
+** WebView 加载 html 片段。文本中的换行符 "\n" 需要替换成 "\<br>"
