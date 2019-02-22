@@ -329,3 +329,10 @@ android:descendantFocusability="blocksDescendants"
         blocksDescendants：viewgroup会覆盖子类控件而直接获得焦点
 		
 ** WebView 加载 html 片段。文本中的换行符 "\n" 需要替换成 "\<br>"
+
+**自动化构建过程**
+- gitlab 推送代码
+- 配置编译时替换参数
+- 配置编译时进行 SnorCube Scanner 扫描代码规范
+- 生成扫描结果报告
+- 生成 apk 安装包
