@@ -14,4 +14,5 @@ grammar_cjkRuby: true
 1、ARouter 分组不能重复
 2、使用 AutoWired 绑定服务时一定要在对应位置调用 `ARouter.getInstance().inject(this)` 去发现服务，否则会找不到服务
 ## ORM 数据库，数据的共享
+# 其他思考
 
