@@ -81,6 +81,7 @@ observable 发送 1、2、3 的时间间隔是大于 observable1发送 a、b、c
 
 ![merge()输出结果](./images/1554457188733.png)
 abc 与 123 是按照时间先后顺序交错进行输出的，说明 `merge()` 后事件的发送是并发的无序的，先发送先处理
+
 **多于四个 observable 的合并**:
 两种方式
 - `merge()` 传入一个 `Iterable<? extends ObservableSource<? extends T>` 对象
@@ -112,7 +113,7 @@ abc 与 123 是按照时间先后顺序交错进行输出的，说明 `merge()` 
 ![zip()输出结果](./images/1554458050628.png)
 使用 zip 合并时，会等待每一次的合并项都发送完毕后再发送下一轮的事件。当我们需要从两个数据源拿数据，但是需要统一合并显示时可以使用 zip 操作符对事件流进行合并。
 
-**多于四个 observable 的合并**:
+**多个 observable 的合并**:
 `zip()` 的多事件合并就有点厉害了，支持九个 Observable 按数据类型合并，除了两个观察者对象合并时 zipper 是 `BiFunction` 其他的为 `FunctionX` ,X 为合并个数。如果多于九个观察者对象合并，与上面两种合并一样可以使用 `zipArray()` 进行合并，但是合并后的观察结果是一个 Object 数组对象，需要自己判断数据类型
 
 # 结语
