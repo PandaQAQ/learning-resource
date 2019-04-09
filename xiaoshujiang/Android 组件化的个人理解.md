@@ -1,6 +1,5 @@
 ---
 title: Android 组件化的个人理解 
-tags: 新建,模板,小书匠
 grammar_cjkRuby: true
 ---
 # 结构图
@@ -162,7 +161,120 @@ ORM 数据库，项目采用的是 GreenDao3.0。因为 GreenDao 的初始化和
 ```
 通过在 gradle 中配置 resourcePrefix 统一为资源文件添加前缀限制，在编译时命名不符合规范编译器将会提示错误。进行组件化改造时这是个体力活，说多了都是泪
 ## module 组合运行
-module 自由组合运行，则需要 module 既要有成为 application 的能力又要有作为 library 的能力。这里我们通过 gradle.pa
+module 自由组合运行，则需要 module 既要有成为 application 的能力又要有作为 library 的能力。我们通过 `gradle.properties` 和 `build.gradle` 文件配置，通过脚本在编译时决定打包哪些业务组件 App 组成应用。
+```groovy
+# 1、整编模式
+# launchApp = app
+# buildAll = true
+#
+# 2、单组件调试
+# launchApp = xx （组件module名字）
+# buildAll = false
+#
+# 2、多组件调试
+# launchApp = app （组件 module 名字）
+# buildAll = false
+# loadComponents = xx1,xx2 (需要联调的组件 module 名字)
+#
+# 打包容器 App module 名字
+shellApp = app
+# 被启动的业务组件的名字，打包发布时一定为外壳 APP
+launchApp = app_bmodule
+#是否整编 App，true 的时候会壳 App 打包会依赖 allComponents。false 打包会依赖 loadComponents
+buildAll = false
+# 所有业务组件 App 的 module 名字
+allComponents = app_amodule,app_bmodule
+# 多业务组件放入 shellApp 联合调试启用的 module 名字
+loadComponents =
+```
+公共的 build.gradle 中配置
+```groovy
+// 根据配置是否为 launchApp 决定业务组件 module 是作为 library 还是独立 App
+boolean isShellApp = project.getName() == shellApp
+boolean isLaunchApp = project.getName() == launchApp
+if (isLaunchApp) { // 壳 APP 始终以 application 模式运行，其他业务组件以依赖库模式根据配置拔插
+    apply plugin: 'com.android.application'
+} else {
+    apply plugin: 'com.android.library'
+}
+·
+·
+·
+    sourceSets {
+        main {
+            jniLibs.srcDirs = ['libs']
+            if (isShellApp){ // 容器 App 只会以 App模式运行或者不运行
+                manifest.srcFile 'src/main/AndroidManifest.xml'
+            }else {
+			// application 模式和 library 模式的清单文件是不一样的，这里根据 isLaunchApp 确定使用哪一个
+                if (isLaunchApp) {
+                    manifest.srcFile 'src/main/debug/AndroidManifest.xml'
+                } else {
+                    manifest.srcFile 'src/main/release/AndroidManifest.xml'
+                }
+            }
+        }
+    }
 
+```
+各业务组件 module 的，build.gradle：
+```groovy
+·
+·
+·
+    defaultConfig { //根据是否为 launchApp 决定添加 applicationId 和版本号 
+        if (isLaunchApp) {
+            applicationId "com.pandaq.app_amodule"
+            versionCode 1
+            versionName "1.0"
+            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        }
+    }
+·
+·
+·
+```
+容器 App module（主 module），相较于一般业务组件 module 的 build.gradle，还需要配置多组件打包和整编打包时动态依赖业务组件库：
+```groovy
+·
+·
+·
+    defaultConfig { //根据是否为 launchApp 决定添加 applicationId 和版本号 
+        if (isLaunchApp) {
+            applicationId "com.pandaq.app_amodule"
+            versionCode 1
+            versionName "1.0"
+            testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
+        }
+    }
+·
+·
+·
+dependencies{
+		·
+		·
+		·
+	// 按需加载依赖业务 APP
+    if (buildAll.toBoolean()) { //整编时将业务组件全部添加依赖
+        for (String name : allComponents.split(",")) {
+            implementation(project(":$name")) {
+                exclude group: 'com.android.support'
+                exclude module: 'appcompat-v7'
+                exclude module: 'support-v4'
+            }
+        }
+    } else { //非整编时可以选择业务组价加入容器 App
+        for (String name : loadComponents.split(",")) {
+            if (!name.isEmpty()) {
+                implementation(project(":$name")) {
+                    exclude group: 'com.android.support'
+                    exclude module: 'appcompat-v7'
+                    exclude module: 'support-v4'
+                }
+            }
+        }
+    }
+}
+```
 # 其他思考
 组件化有风险，推进需谨慎。一个非组件化的大型项目要对其进行组件化改造这个过程是漫长而艰巨的，项目中各个模块不可避免的会有各种耦合关系，往往牵一发而动全身，要对它进行组件化改造。首先要对项目进行封装解耦，独立的功能该下沉的下沉，该重写的重写。有时候代码的复用对组件化改造简直是灾难，尤其是本来不属于一个功能模块的界面进行了复用这种。
