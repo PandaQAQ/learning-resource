@@ -27,6 +27,15 @@ grammar_cjkRuby: true
             android:name="com.pandaq.pandamvp.app.lifecycle.LifeCycleInjector"
             android:value="AppInjector"/>
 ```
+这样配置之后我们是没办法手动控制 module 生命周期方法的调用顺序的，因此在 `LifeCycleInjector` 中增加了优先级选项，默认为 0，数字越大越延后加载
+```java
+    /**
+     * priority for lifeCycle methods inject
+     *
+     * @return priority 0 for first
+     */
+    int priority();
+```
 ## Activity 及 Fragment 生命周期
 - **Activity**：如上图中，与 Application 生命周期注入对应，在 AppProxy 的 `onCreate（）` 方法中将 Activity 生命周期回调注册到 application 中。通过 Application 来管理 Activity 生命周期。
 ```java
@@ -148,8 +157,12 @@ ORM 数据库，项目采用的是 GreenDao3.0。因为 GreenDao 的初始化和
 2、直接把数据实体类都放在一个公共库中，GreenDao 的初始化也放在这个库中。我在项目的实际操作中是将要存入数据库的实体类放入 Router module 中按文件夹分开存放的。
 数据库的操作工具类定义在对应的组件内，如 Email 组件，其中的缓存表操作工具类叫 `EmailTb`，通过 EmailTb 的方法对数据库进行增删改查。Email 组件内部增删改查没有任何的阻碍隔离，如果 A组件需要对 Email 表进行增删改查，则需要通过 EmailService 中注册暴露的方法间接的增删改查。如果 Email 未注册暴露对应方法则其他组件不能对 Email 数据库操作
 ## 资源文件重名问题
-
+```groovy
+    resourcePrefix "a_"
+```
+通过在 gradle 中配置 resourcePrefix 统一为资源文件添加前缀限制，在编译时命名不符合规范编译器将会提示错误。进行组件化改造时这是个体力活，说多了都是泪
 ## module 组合运行
+module 自由组合运行，则需要 module 既要有成为 application 的能力又要有作为 library 的能力。这里我们通过 gradle.pa
 
 # 其他思考
 组件化有风险，推进需谨慎。一个非组件化的大型项目要对其进行组件化改造这个过程是漫长而艰巨的，项目中各个模块不可避免的会有各种耦合关系，往往牵一发而动全身，要对它进行组件化改造。首先要对项目进行封装解耦，独立的功能该下沉的下沉，该重写的重写。有时候代码的复用对组件化改造简直是灾难，尤其是本来不属于一个功能模块的界面进行了复用这种。
