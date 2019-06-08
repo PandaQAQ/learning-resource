@@ -336,3 +336,6 @@ android:descendantFocusability="blocksDescendants"
 - 配置编译时进行 SnorCube Scanner 扫描代码规范
 - 生成扫描结果报告
 - 生成 apk 安装包
+
+** Android8.0 华为手机BUG**
+可隐藏导航栏模式，在未展开导航栏时进入其他应用，自己应用进入后台。展开导航栏再回到自己应用会触发页面重建。处理办法为：Manifest 中对应 Activity 设置 configchanges 加上 screenlayout 属性，对这种情况的页面重构进行屏蔽
