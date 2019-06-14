@@ -339,3 +339,5 @@ android:descendantFocusability="blocksDescendants"
 
 ** Android8.0 华为手机BUG**
 可隐藏导航栏模式，在未展开导航栏时进入其他应用，自己应用进入后台。展开导航栏再回到自己应用会触发页面重建。处理办法为：Manifest 中对应 Activity 设置 configchanges 加上 screenlayout 属性，对这种情况的页面重构进行屏蔽
+
+**popupwindo 要沉浸式，设置 matchparent 并且 设置 isClippingEnable = false**
