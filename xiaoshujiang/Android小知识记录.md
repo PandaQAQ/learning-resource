@@ -341,3 +341,14 @@ android:descendantFocusability="blocksDescendants"
 可隐藏导航栏模式，在未展开导航栏时进入其他应用，自己应用进入后台。展开导航栏再回到自己应用会触发页面重建。处理办法为：Manifest 中对应 Activity 设置 configchanges 加上 screenlayout 属性，对这种情况的页面重构进行屏蔽
 
 **popupwindo 要沉浸式，设置 matchparent 并且 设置 isClippingEnable = false**
+
+**RxJava2 异常处理**
+- 慎用 Consumer 回调，确保事件流永远不会出错时才使用
+``` kotlin
+.subscribe(object : Consumer<String> {
+                                override fun accept(t: String?) {
+                                    Log.d("result: ", t)
+                                }
+                            })
+```
+否则必须添加再添加个异常处理，或者使用带异常处理的 Observer 回调。
