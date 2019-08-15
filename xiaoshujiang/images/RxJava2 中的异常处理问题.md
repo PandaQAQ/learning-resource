@@ -46,9 +46,58 @@ void subscribe(Observer<? super T> observer)
 我们分别进行一下几种方式模拟异常：
 
 - 1、Observer onNext 中抛出异常
+``` kotlin
+                apiService.newJsonKeyData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .compose(RxScheduler.sync())
+                    .subscribe(object : Observer<List<ZooData>> {
+                        override fun onComplete() {
+
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+
+                        }
+
+                        override fun onNext(t: List<ZooData>) {
+                            throw RuntimeException("runtime exception")
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Log.d("error", e.message)
+                        }
+
+                    })
+```
 `结果：不会触发 onError，App 闪退`
 
 - 2、Observer map 操作符中抛出异常
+```java
+                apiService.newJsonKeyData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .map {
+                        throw RuntimeException("runtime exception")
+                    }
+                    .compose(RxScheduler.sync())
+                    .subscribe(object : Observer<List<ZooData>> {
+                        override fun onComplete() {
+
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+
+                        }
+
+                        override fun onNext(t: List<ZooData>) {
+
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Log.d("error", e.message)
+                        }
+
+                    })
+```
 `结果：会触发 Observer 的 onError，App 未闪退`
 
 - 3、Consumer onNext 中抛出异常
