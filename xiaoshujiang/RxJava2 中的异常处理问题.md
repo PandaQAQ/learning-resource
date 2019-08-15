@@ -101,10 +101,29 @@ void subscribe(Observer<? super T> observer)
 `结果：会触发 Observer 的 onError，App 未闪退`
 
 - 3、Consumer onNext 中抛出异常
+```kotlin
+             apiService.newJsonKeyData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .compose(RxScheduler.sync())
+                    .subscribe({
+                        throw RuntimeException("messsasassssssssssssssssssssssssssssssssssssss")
+                    }, {
+                        Log.d("Error", it.message)
+                    })
+```
 `结果 A：有 errorConsumer 触发 errorConsumer，App 未闪退`
+```kotlin
+    apiService.newJsonKeyData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .compose(RxScheduler.sync())
+                    .subscribe {
+                        throw RuntimeException("messsasassssssssssssssssssssssssssssssssssssss")
+                    }
+```
 `结果 B：无 errorConsumer，App 闪退`
 
 - 4、先取消订阅再抛出异常
+
 `结果：不会触发错误回调，App 闪退`
 
 那么为什么会出现这些不同情况呢？我们从源码中去一探究竟
