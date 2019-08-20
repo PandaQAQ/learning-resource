@@ -45,7 +45,7 @@ void subscribe(Observer<? super T> observer)
 # 异常处理
 我们分别进行一下几种方式模拟异常：
 
-- 1、Observer onNext 中抛出异常（调用指定事件发送线程方法）
+- 1、Observer onNext 中抛出异常（切换线程）
 ``` kotlin
                 apiService.newJsonKeyData()
                     .doOnSubscribe { t -> compositeDisposable.add(t) }
@@ -71,28 +71,30 @@ void subscribe(Observer<? super T> observer)
 ```
 `结果：不会触发 onError，App 崩溃`
 
-- 2、Observer onNext 中抛出异常（未调用指定事件发送线程方法）
+- 2、Observer onNext 中抛出异常（未切换线程）
 ``` kotlin
-                apiService.newJsonKeyData()
-                    .doOnSubscribe { t -> compositeDisposable.add(t) }
-                    .subscribe(object : Observer<List<ZooData>> {
-                        override fun onComplete() {
+               Observable.create<String> {
+                        it.onNext("ssss")
+                    }
+                            .subscribe(object : Observer<String> {
+                                override fun onComplete() {
 
-                        }
+                                }
 
-                        override fun onSubscribe(d: Disposable) {
+                                override fun onSubscribe(d: Disposable) {
 
-                        }
+                                }
 
-                        override fun onNext(t: List<ZooData>) {
-                            throw RuntimeException("runtime exception")
-                        }
+                                override fun onNext(t: String) {
+                                    Log.d("result::", t)
+                                    throw RuntimeException("run llllll")
+                                }
 
-                        override fun onError(e: Throwable) {
-                            Log.d("error", e.message)
-                        }
+                                override fun onError(e: Throwable) {
+                                    Log.e("sss", "sss", e)
+                                }
 
-                    })
+                            })
 ```
 `结果：会触发 onError，App 未崩溃`
 
@@ -263,3 +265,27 @@ void subscribe(Observer<? super T> observer)
 `onNext` 中 try catch 了 mapper.apply()，这个 apply 执行的就是我们在操作符中实现的 `function` 方法。因此在 map 之类数据变换操作符中产生异常能够自身捕获并发送给最终的 Observer。如果此时的订阅对象中能消耗掉异常则事件流正常走 `onError()` 结束,如果订阅方式为上以节中的 consumer，则崩溃情况为上一节中的分析结果。
 
 ## Observer 的 onNext 中抛出异常
+上述的方式 `1` 为一次网络请求，里面涉及到线程的切换。方式 `2` 为直接 create 一个 `Observable` 对象，不涉及线程切换，其结果为线程切换后,观察者 Observer 的 onNext() 方法中抛出异常无法触发 onError()，程序崩溃。
+### 未切换线程的 Observable.create
+查看 `create()` 方法源码，发现内部创建了一个 `ObservableCreate` 对象，在调用订阅时会触发 `subscribeActual()`  方法。在  `subscribeActual()` 中再调用我们 create 时传入的 `ObservableOnSubscribe` 对象的 `subscribe()` 方法来触发事件流。
+
+```java
+    @Override
+    protected void subscribeActual(Observer<? super T> observer) {
+	
+		// 对我们的观察者使用 CreateEmitter 进行包装,内部的触发方法是相对应的
+        CreateEmitter<T> parent = new CreateEmitter<T>(observer);
+        observer.onSubscribe(parent);
+
+        try {
+			// source 为 create 时创建的 ObservableOnSubscribe 匿名内部接口实现类
+            source.subscribe(parent);
+        } catch (Throwable ex) {
+            Exceptions.throwIfFatal(ex);
+            parent.onError(ex);
+        }
+    }
+```
+上述代码中的订阅过程是使用 try catch 今夕包裹的。订阅及订阅触发后发送的事件流都在一个线程，所以能够捕获整个事件流中的异常。（PS : 大家可以尝试下使用  observeOn() 切换事件发送线程。会发现异常不能再捕获，程序崩溃）
+
+### 涉及线程变换时的异常处理
