@@ -1,12 +1,12 @@
 ---
-title: RxJava2 中的异常处理问题
+title: 聊一聊 RxJava2 中的异常及处理方式
 tags: 新建,模板,小书匠
 grammar_cjkRuby: true
 ---
 众所周知，RxJava2 中当链式调用中抛出异常时，如果没有对应的 Consumer 去处理异常，则这个异常会被抛出到虚拟机中去，Android 上的直接表现就是 crash，程序崩溃。
 
 # 订阅方式
-说异常处理前咱们先来看一下 RxJava2 中 `Observable` 订阅方法 `subscribe()` 的几种订阅方式：
+说异常处理前咱们先来看一下 RxJava2 中 `Observable` 订阅方法 `subscribe()` 我们常用的几种订阅方式：
 
 ```java 
 
@@ -45,11 +45,11 @@ void subscribe(Observer<? super T> observer)
 # 异常处理
 我们分别进行一下几种方式模拟异常：
 
-- 1、Observer onNext 中抛出异常
+- 1、Observer onNext 中抛出异常（调用指定事件发送线程方法）
 ``` kotlin
                 apiService.newJsonKeyData()
                     .doOnSubscribe { t -> compositeDisposable.add(t) }
-                    .compose(RxScheduler.sync())
+                    .compose(RxScheduler.sync()) // 封装的线程切换
                     .subscribe(object : Observer<List<ZooData>> {
                         override fun onComplete() {
 
@@ -69,9 +69,34 @@ void subscribe(Observer<? super T> observer)
 
                     })
 ```
-`结果：不会触发 onError，App 闪退`
+`结果：不会触发 onError，App 崩溃`
 
-- 2、Observer map 操作符中抛出异常
+- 2、Observer onNext 中抛出异常（未调用指定事件发送线程方法）
+``` kotlin
+                apiService.newJsonKeyData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .subscribe(object : Observer<List<ZooData>> {
+                        override fun onComplete() {
+
+                        }
+
+                        override fun onSubscribe(d: Disposable) {
+
+                        }
+
+                        override fun onNext(t: List<ZooData>) {
+                            throw RuntimeException("runtime exception")
+                        }
+
+                        override fun onError(e: Throwable) {
+                            Log.d("error", e.message)
+                        }
+
+                    })
+```
+`结果：会触发 onError，App 未崩溃`
+
+- 3、Observer map 操作符中抛出异常
 ```java
                 apiService.newJsonKeyData()
                     .doOnSubscribe { t -> compositeDisposable.add(t) }
@@ -98,9 +123,9 @@ void subscribe(Observer<? super T> observer)
 
                     })
 ```
-`结果：会触发 Observer 的 onError，App 未闪退`
+`结果：会触发 Observer 的 onError，App 未崩溃`
 
-- 3、Consumer onNext 中抛出异常
+- 4、Consumer onNext 中抛出异常
 ```kotlin
              apiService.newJsonKeyData()
                     .doOnSubscribe { t -> compositeDisposable.add(t) }
@@ -111,7 +136,7 @@ void subscribe(Observer<? super T> observer)
                         Log.d("Error", it.message)
                     })
 ```
-`结果 A：有 errorConsumer 触发 errorConsumer，App 未闪退`
+`结果 A：有 errorConsumer 触发 errorConsumer，App 未崩溃`
 ```kotlin
     apiService.newJsonKeyData()
                     .doOnSubscribe { t -> compositeDisposable.add(t) }
@@ -120,10 +145,121 @@ void subscribe(Observer<? super T> observer)
                         throw RuntimeException("messsasassssssssssssssssssssssssssssssssssssss")
                     }
 ```
-`结果 B：无 errorConsumer，App 闪退`
+`结果 B：无 errorConsumer，App 崩溃`
 
-- 4、先取消订阅再抛出异常
+那么为什么会出现这些不同情况呢？我们从源码中去一探究竟。
 
-`结果：不会触发错误回调，App 闪退`
+## Consumer 订阅方式的崩溃与不崩溃
+`subscribe()` 传入 consumer 类型参数最终在 `Observable` 中会将传入的参数转换为 `LambdaObserver` 再调用 `subscribe(lambdaObserver)`进行订阅。展开  `LambdaObserver`：(主要看 onNext 和 onError 方法中的处理)
+```java
+		.
+		.
+		.
+		    @Override
+    public void onNext(T t) {
+        if (!isDisposed()) {
+            try {
+                onNext.accept(t);
+            } catch (Throwable e) {
+                Exceptions.throwIfFatal(e);
+                get().dispose();
+                onError(e);
+            }
+        }
+    }
 
-那么为什么会出现这些不同情况呢？我们从源码中去一探究竟
+    @Override
+    public void onError(Throwable t) {
+        if (!isDisposed()) {
+            lazySet(DisposableHelper.DISPOSED);
+            try {
+                onError.accept(t);
+            } catch (Throwable e) {
+                Exceptions.throwIfFatal(e);
+                RxJavaPlugins.onError(new CompositeException(t, e));
+            }
+        } else {
+            RxJavaPlugins.onError(t);
+        }
+    }
+		.
+		.
+		.
+
+```
+`onNext` 中调用了对应 consumer 的 `apply()` 方法，并且进行了 try catch。因此我们在 consumer 中进行的工作抛出异常会被捕获触发 LambdaObserver 的 `onError`。再看 `onError` 中，如果订阅未取消且 errorConsumer 的 `apply()` 执行无异常则能正常走完事件流，否则会调用 `RxJavaPlugins.onError(t)`。看到这里应该就能明白了，当订阅时未传入 errorConsumer时 `Observable` 会指定 `OnErrorMissingConsumer` 为默认的 errorConsumer，发生异常时抛出 `OnErrorNotImplementedException`。
+
+### RxJavaPlugins.onError(t)
+上面分析，发现异常最终会流向 RxJavaPlugins.onError(t)。这个方法为 RxJava2 提供的一个全局的静态方法。
+```java
+    public static void onError(@NonNull Throwable error) {
+        Consumer<? super Throwable> f = errorHandler;
+
+        if (error == null) {
+            error = new NullPointerException("onError called with null. Null values are generally not allowed in 2.x operators and sources.");
+        } else {
+            if (!isBug(error)) {
+                error = new UndeliverableException(error);
+            }
+        }
+
+        if (f != null) {
+            try {
+                f.accept(error);
+                return;
+            } catch (Throwable e) {
+                // Exceptions.throwIfFatal(e); TODO decide
+                e.printStackTrace(); // NOPMD
+                uncaught(e);
+            }
+        }
+
+        error.printStackTrace(); // NOPMD
+        uncaught(error);
+    }
+```
+查看其源码发现，当 `errorHandler` 不为空时异常将由其消耗掉，为空或者消耗过程产生新的异常则 RxJava 会将异常抛给虚拟机（可能导致程序崩溃）。 `errorHandler`本身是一个 Consumer 对象，我们可以通过如下方式配置他：
+```java
+    RxJavaPlugins.setErrorHandler(object : Consumer1<Throwable> {
+        override fun accept(t: Throwable?) {
+            TODO("not implemented") //To change body of created functions use File | Settings | File Templates.
+        }
+
+    })
+```
+## 数据操作符中抛出异常
+以 map 操作符为例，map 操作符实际上 RxJava 是将事件流 hook 了另一个新的 Observable `ObservableMap`
+```java
+    @CheckReturnValue
+    @SchedulerSupport(SchedulerSupport.NONE)
+    public final <R> Observable<R> map(Function<? super T, ? extends R> mapper) {
+        ObjectHelper.requireNonNull(mapper, "mapper is null");
+        return RxJavaPlugins.onAssembly(new ObservableMap<T, R>(this, mapper));
+    }
+```
+进入 ObservableMap 类，发现内部订阅了一个内部静态类 `MapObserver`，重点看 `MapObserver`  的 `onNext` 方法
+``` java
+        public void onNext(T t) {
+            if (done) {
+                return;
+            }
+
+            if (sourceMode != NONE) {
+                downstream.onNext(null);
+                return;
+            }
+
+            U v;
+
+            try {
+                v = ObjectHelper.requireNonNull(mapper.apply(t), "The mapper function returned a null value.");
+            } catch (Throwable ex) {
+                fail(ex);
+                return;
+            }
+            downstream.onNext(v);
+        }
+```
+`onNext` 中 try catch 了 mapper.apply()，这个 apply 执行的就是我们在操作符中实现的 `function` 方法。因此在 map 之类数据变换操作符中产生异常能够自身捕获并发送给最终的 Observer。如果此时的订阅对象中能消耗掉异常则事件流正常走 `onError()` 结束,如果订阅方式为上以节中的 consumer，则崩溃情况为上一节中的分析结果。
+
+## Observer 的 onNext 中抛出异常
