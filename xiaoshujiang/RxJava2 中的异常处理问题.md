@@ -377,4 +377,7 @@ Retrofit 进行网络请求返回的 Observable 对象实质上是 `RxJava2CallA
 会发现，run 中 进行了 try catch。但 catch 内消化异常使用的是全局异常处理 `RxJavaPlugins.onError(t);`，而不是某一个观察者的 `onError`。所以在经过切换线程操作符后，观察者 onNext 中抛出的异常，onError 无法捕获。
 
 # 处理方案
-
+既然知道了问题所在，那么处理问题的方案也就十分清晰了。
+1、注册全局的异常处理
+2、Consumer 作为观察者时，不完全确定没有异常一定要添加异常处理 Consumer
+3、Observer 可以创建一个 BaseObaerver 将 onNext 内部进行 try catch 人为的流转到 onError 中，项目中的观察这都使用这个 BaseObserver 的子类。
