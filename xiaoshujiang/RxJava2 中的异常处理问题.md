@@ -289,3 +289,92 @@ void subscribe(Observer<? super T> observer)
 上述代码中的订阅过程是使用 try catch 今夕包裹的。订阅及订阅触发后发送的事件流都在一个线程，所以能够捕获整个事件流中的异常。（PS : 大家可以尝试下使用  observeOn() 切换事件发送线程。会发现异常不能再捕获，程序崩溃）
 
 ### 涉及线程变换时的异常处理
+Retrofit 进行网络请求返回的 Observable 对象实质上是 `RxJava2CallAdapter` 中生成的 `BodyObservable`,期内部的 `onNext` 是没有进行异常捕获的。其实这里是否捕获并不是程序崩溃的根本原因，因为进行网络请求，必然是涉及到线程切换的。就算此处 try catch 处理了，也并不能捕获到事件流下游的异常。
+```java
+    @Override public void onNext(Response<R> response) {
+      if (response.isSuccessful()) {
+        observer.onNext(response.body());
+      } else {
+        terminated = true;
+        Throwable t = new HttpException(response);
+        try {
+          observer.onError(t);
+        } catch (Throwable inner) {
+          Exceptions.throwIfFatal(inner);
+          RxJavaPlugins.onError(new CompositeException(t, inner));
+        }
+      }
+    }
+```
+以我们在最终的 Observer 的 onNext 抛出异常为例，要捕获这次异常那么必须在最终的调用线程中去进行捕获。即 `.observeOn(AndroidSchedulers.mainThread())` 切换过来的 Android 主线程。与其他操作符一样，线程切换时产生了一组新的订阅关系，RxJava 内部会创建一个新的观察对象 `ObservableObserveOn`。
+```java
+        @Override
+        public void onNext(T t) {
+            if (done) {
+                return;
+            }
+
+            if (sourceMode != QueueDisposable.ASYNC) {
+                queue.offer(t);
+            }
+            schedule();
+        }
+		.
+		.
+		.
+		void schedule() {
+            if (getAndIncrement() == 0) {
+                worker.schedule(this); // 执行 ObservableObserveOn 的 run 方法
+            }
+        }
+		.
+		.
+		.
+	      @Override
+        public void run() {
+            if (outputFused) {
+                drainFused();
+            } else {
+                drainNormal();
+            }
+        }
+	
+```
+而执行任务的 worker 即为对应线程 Scheduler 的对应实现子类所创建的 Worker，以 `AndroidSchedulers.mainThread()` 为例，Scheduler 实现类为 `HandlerScheduler`，其对应 Worker 为 `HandlerWorker`，最终任务交给 `ScheduledRunnable` 来执行。
+```java
+    private static final class ScheduledRunnable implements Runnable, Disposable {
+        private final Handler handler;
+        private final Runnable delegate;
+
+        private volatile boolean disposed; // Tracked solely for isDisposed().
+
+        ScheduledRunnable(Handler handler, Runnable delegate) {
+            this.handler = handler;
+            this.delegate = delegate;
+        }
+
+        @Override
+        public void run() {
+            try {
+                delegate.run();
+            } catch (Throwable t) {
+                RxJavaPlugins.onError(t);
+            }
+        }
+
+        @Override
+        public void dispose() {
+            handler.removeCallbacks(this);
+            disposed = true;
+        }
+
+        @Override
+        public boolean isDisposed() {
+            return disposed;
+        }
+    }
+```
+会发现，run 中 进行了 try catch。但 catch 内消化异常使用的是全局异常处理 `RxJavaPlugins.onError(t);`，而不是某一个观察者的 `onError`。所以在经过切换线程操作符后，观察者 onNext 中抛出的异常，onError 无法捕获。
+
+# 处理方案
+
