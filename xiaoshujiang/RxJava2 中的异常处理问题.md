@@ -379,5 +379,31 @@ Retrofit 进行网络请求返回的 Observable 对象实质上是 `RxJava2CallA
 # 处理方案
 既然知道了问题所在，那么处理问题的方案也就十分清晰了。
 1、注册全局的异常处理
+```java
+        RxJavaPlugins.setErrorHandler(object : Consumer<Throwable> {
+            override fun accept(t: Throwable?) {
+                // do something   
+            }
+
+        })
+```
 2、Consumer 作为观察者时，不完全确定没有异常一定要添加异常处理 Consumer
+```java
+ apiService.stringData()
+                    .doOnSubscribe { t -> compositeDisposable.add(t) }
+                    .compose(RxScheduler.sync())
+                    .subscribe(Consumer<Boolean>{ }, Consumer<Throwable> { })
+```
 3、Observer 可以创建一个 BaseObaerver 将 onNext 内部进行 try catch 人为的流转到 onError 中，项目中的观察这都使用这个 BaseObserver 的子类。
+```java
+    @Override
+    public void onNext(T t) {
+        try {
+            onSuccess(t);
+        } catch (Exception e) {
+            onError(e);
+        }
+        data = t;
+        success = true;
+    }
+```
