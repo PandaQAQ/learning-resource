@@ -1,5 +1,5 @@
 ---
-title: Linux 环境搭建Andrpid 的 Jenkins 自动构建环境
+title: Linux 环境搭建Android 的 Jenkins 自动构建环境
 tags: 新建,模板,小书匠
 renderNumberedHeading: true
 grammar_cjkRuby: true
