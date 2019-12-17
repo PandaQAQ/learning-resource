@@ -81,22 +81,10 @@ Gradle //gradle 构建插件
 
 ![enter description here](./images/1575360845122.png)
 - 配置源码
-Repository URL,为源码仓库 http 地址，Credentials 点击添加填写 gitlab 的账号密码创建一个凭证即可,指定分支不要错了，否则可能拉不下代码
+Repository URL,为源码仓库 http 地址，Credentials 点击添加填写 gitlab 的账号密码创建一个凭证即可
 
  ![enter description here](./images/1575361641156.png)
- - 指定对应的 Gradle 版本
- 
- ![enter description here](./images/1575526321279.png)
-
  
  经过上述配置即完成了基本的构建配置，点击立即构建即可构建默认的 master 配置。可通过参数化构建，譬如选择构建分支，构建类型等。
- 
- # 遇到的问题
-
-**1、 Gradle 版本与项目中的版本不一致**
-参考配置中的安装 gradle 对应的版本，再项目配置中再选择对应版本
-**2、 源码拉取超时**
-项目配置 -> Git -> Additional Behaviours -> Advanced clone behaviours 设置超时时长
-![enter description here](./images/1575526708553.png)
 
 
