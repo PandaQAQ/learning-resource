@@ -352,3 +352,10 @@ android:descendantFocusability="blocksDescendants"
                             })
 ```
 否则必须添加再添加个异常处理，或者使用带异常处理的 Observer 回调。
+**Seekbar 去掉烦人的点击效果**
+```java
+    android:thumb="@null"
+    android:background="@null"
+```
+** SurfaceView 与 TextureView**
+surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可在上面覆盖布局
