@@ -111,7 +111,7 @@ vim /etc/mysql/mysql.conf.d/mysqld.cnf
 
 Navicat 连接腾讯云服务器上的数据库
 
-// ssh 配置连接到服务器账户
+// ssh 配置连接到服务器账户，ip 地址为服务器公网 ip，用户名为登录服务器用户名和密码
 ![enter description here](./images/1573455874539.png)
 // 使用数据库密码连接数据库
 ![enter description here](./images/1573455931232.png)
