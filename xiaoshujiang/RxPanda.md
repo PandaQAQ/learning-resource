@@ -12,10 +12,21 @@
 > 4、支持日志格式化及并发按序输出
 > 5、支持 data 为基本数据类型
 > 6、支持 int 类型 json 解析为 String 不会 0 变成 0.0
+> 7、支持 json 解析时 null 值解析为对象时替换为配置的默认值
+> 8、支持解析类型为 `int`、`String`、`float`、`double`、`long`、`BigDecima` 时 json 字段缺失。解析为对象时自动使用默认值。
 
 # 基本用法
 ### 一、全局配置推荐在 Application 初始化时配置
 ```java
+
+		val defValues = NullDataValue()
+        defValues.defBoolean = false
+        defValues.defDouble = -1.0
+        defValues.defFloat = -0.0f
+        defValues.defInt = -1
+        defValues.defLong =0L
+        defValues.defString = ""
+		
         RxPanda.globalConfig()
                 .baseUrl(ApiService.BASE_URL) //配置基础域名
                 .netInterceptor(new HttpLoggingInterceptor()
@@ -25,6 +36,7 @@
                 .connectTimeout(10000) // 连接超时时间（ms）
                 .readTimeout(10000) // 读取超时时间（ms）
                 .writeTimeout(10000) // 写入超时时间（ms）
+				.defaultValue(defValues) // gson 返回字段为 null 或 字段缺失时，解析实体对象的基本类型默认值配置
                 .debug(BuildConfig.DEBUG);// 是否 dubug 模式（非 debug 模式不会输出日志）
 ```
 以上只是精简的配置，还可以通过 GlobalConfig 配置类进行更多的全局配置
