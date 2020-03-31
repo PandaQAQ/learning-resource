@@ -8,3 +8,6 @@ grammar_cjkRuby: true
 1、数据流向是自上向下的流向，订阅是自下向上的订阅
 2、数据流产生必定是在所有的订阅之后，这也就是为什么 subscribeOn 不管怎样设置订阅线程，只要一遇到 observeOn 数据流的线程就会被切换到 observeOn 定义的线程上的原因。
 3、综上所述，subscribeOn 每次订阅都会切换上级的订阅线程，但是事件回来后只要遇到 observeOn 就会把数据流换到 observeOn 的线程
+4、subscribeOn 线程作用区间为 自下向上直到遇到下一个 subscribeOn 或者 observeOn 时。这也就是为什么有人说只有自上向下的第一个 subscribeOn 起作用的原因。订阅阶段的线程最终会切换到最后一次指定的订阅线程。
+
+![enter description here](./images/1585645584902.png)
