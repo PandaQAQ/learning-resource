@@ -10,4 +10,5 @@ grammar_cjkRuby: true
 3、综上所述，subscribeOn 每次订阅都会切换上级的订阅线程，但是事件回来后只要遇到 observeOn 就会把数据流换到 observeOn 的线程
 4、subscribeOn 线程作用区间为 自下向上直到遇到下一个 subscribeOn 或者 observeOn 时。这也就是为什么有人说只有自上向下的第一个 subscribeOn 起作用的原因。订阅阶段的线程最终会切换到最后一次指定的订阅线程。
 
-![enter description here](./images/1585645584902.png)
+![RxJava2 事件订阅流程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585645934040.png)
+![RxJava2 线程切换流程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585645839462.png)
