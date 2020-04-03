@@ -1,5 +1,5 @@
 ---
-title: RxJava 观察绑定和事件发送流程及这个过程中的线程切换分析 
+title: RxJava 观察绑定和事件发送流程及其中的线程切换分析 
 grammar_cjkRuby: true
 ---
 **本文的所有分析都是基于 RxJava2 进行的。以下的 RxJava 指 RxJava2**
@@ -7,15 +7,16 @@ grammar_cjkRuby: true
 - RxJava 的观察绑定和事件发送过程
 - RxJava 观察绑定和事件发送过程中的线程切换
 
-从 RxJava1.0 到 RxJava2.0，在项目开发中已经使用了很长时间这个库了。链式调用，丝滑的线程切换很香，但是如果没弄清楚
+从 RxJava1.0 到 RxJava2.0，在项目开发中已经使用了很长时间这个库了。链式调用，丝滑的线程切换很香，但是如果没弄清楚其中的奥妙很容易掉进线程调度的坑里。这篇文章我们就来对 RxJava 的订阅过程、时间发送过程、线程调度进行分析
 # 订阅和事件流
 
 1、数据流向是自上向下的流向，订阅是自下向上的订阅
 2、数据流产生必定是在所有的订阅之后，这也就是为什么 subscribeOn 不管怎样设置订阅线程，只要一遇到 observeOn 数据流的线程就会被切换到 observeOn 定义的线程上的原因。
 3、综上所述，subscribeOn 每次订阅都会切换上级的订阅线程，但是事件回来后只要遇到 observeOn 就会把数据流换到 observeOn 的线程
 4、subscribeOn 线程作用区间为 自下向上直到遇到下一个 subscribeOn 或者 observeOn 时。这也就是为什么有人说只有自上向下的第一个 subscribeOn 起作用的原因。订阅阶段的线程最终会切换到最后一次指定的订阅线程。
+
 ![enter description here](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585807148894.png)
-# 线程变换
+# 线程调度
 RxJava 中线程变换通过 `subscribeOn()`和 `observeOn()`两个操作来进行。其中 `subscribeOn()`改变的是订阅线程的执行线程，即事件发生的线程。`observeOn()`改变的是事件结果观察者回调所在线程，即 `onNext()`方法所在的线程。
 
 ![举个栗子](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585809124336.png)
