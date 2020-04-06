@@ -9,13 +9,105 @@ grammar_cjkRuby: true
 
 从 RxJava1.0 到 RxJava2.0，在项目开发中已经使用了很长时间这个库了。链式调用，丝滑的线程切换很香，但是如果没弄清楚其中的奥妙很容易掉进线程调度的坑里。这篇文章我们就来对 RxJava 的订阅过程、时间发送过程、线程调度进行分析
 # 订阅和事件流
+先说结论
+- 按着代码书写顺序，事件自上向下发送
+- 订阅从 `subscribe()` 开始自下向上订阅，这也是整个事件流的起点，当订阅开始整个操作才会生效执行
+- 订阅完成后才会发送事件
+## 源码分析
+以`map()`操作为例：
+>```java
+>    @CheckReturnValue
+>    @SchedulerSupport(SchedulerSupport.NONE)
+>    public final <R> Observable<R> map(Function<? super T, ? extends R> mapper) {
+>        ObjectHelper.requireNonNull(mapper, "mapper is null");
+>        return RxJavaPlugins.onAssembly(new ObservableMap<T, R>(this, mapper));
+>    }
+>```
+调用`map`操作符时，RxJavaPliguns 会注册一个新的 `ObservableMap` 对象，查看其它操作符会发现都有对应的 `Observable` 对象产生。同时，上游的 `Observabe`会作为 `source` 参数传入赋值给这个新的 `Observable` 的 `source`属性。层层向下，可以对这个新生成的 `Observable`又可以继续使用操作符。
+### 订阅过程：
+当调用最后一个  `Observable` 的 `subscribe（）` 方法时，即开始订阅过程。
+>```java
+>    @SchedulerSupport(SchedulerSupport.NONE)
+>    @Override
+>    public final void subscribe(Observer<? super T> observer) {
+>        ObjectHelper.requireNonNull(observer, "observer is null");
+>        try {
+>            observer = RxJavaPlugins.onSubscribe(this, observer);
+>
+>            ObjectHelper.requireNonNull(observer, "The RxJavaPlugins.onSubscribe hook returned a null Observer. Please change the handler provided to RxJavaPlugins.setOnObservableSubscribe for invalid null returns. Further reading: https://github.com/ReactiveX/RxJava/wiki/Plugins");
+>
+>            subscribeActual(observer);
+>        } catch (NullPointerException e) { // NOPMD
+>            throw e;
+>        } catch (Throwable e) {
+>            Exceptions.throwIfFatal(e);
+>            // can't call onError because no way to know if a Disposable has been set or not
+>            // can't call onSubscribe because the call might have set a Subscription already
+>            RxJavaPlugins.onError(e);
+>
+>            NullPointerException npe = new NullPointerException("Actually not, but can't throw other exceptions due to RS");
+>            npe.initCause(e);
+>            throw npe;
+>        }
+>    }
+>```
+在调用`subscribe(Observer)` 时实际上会去调用各个 `Observable `实现子类中的 `subscribeActual()` 方法:
+>```java
+>    @Override
+>    public void subscribeActual(Observer<? super U> t) {
+>        source.subscribe(new MapObserver<T, U>(t, function));
+>    }
+>```
+而在这个`subscribeActual()` 方法也很简单，调用了 `source` 去订阅一个新生成的 `Observer` 对象，同时这个新的`MapObserver`会将调用`subscribe()`时传入的 `observer`,赋值给`downstream`属性。这样每一级订阅都会将上级的 `Observable`、本级生成的  `Observer`、订阅下级传入的`Observer`联系起来，直到达到 Observable 最初创建的地方。以 `ObservableCreate`为例：
+ >```java
+>    @Override
+>    protected void subscribeActual(Observer<? super T> observer) {
+>        CreateEmitter<T> parent = new CreateEmitter<T>(observer);
+>        observer.onSubscribe(parent);
+>
+>        try {
+>            source.subscribe(parent);
+>        } catch (Throwable ex) {
+>            Exceptions.throwIfFatal(ex);
+>            parent.onError(ex);
+>        }
+>    }
+>```
+订阅时会调用`source.subscrebe(parent)`,而这个`source` 又是从哪儿来的呢？
+>```java
+>    public ObservableCreate(ObservableOnSubscribe<T> source) {
+>        this.source = source;
+>    }
+>```
 
-1、数据流向是自上向下的流向，订阅是自下向上的订阅
-2、数据流产生必定是在所有的订阅之后，这也就是为什么 subscribeOn 不管怎样设置订阅线程，只要一遇到 observeOn 数据流的线程就会被切换到 observeOn 定义的线程上的原因。
-3、综上所述，subscribeOn 每次订阅都会切换上级的订阅线程，但是事件回来后只要遇到 observeOn 就会把数据流换到 observeOn 的线程
-4、subscribeOn 线程作用区间为 自下向上直到遇到下一个 subscribeOn 或者 observeOn 时。这也就是为什么有人说只有自上向下的第一个 subscribeOn 起作用的原因。订阅阶段的线程最终会切换到最后一次指定的订阅线程。
+>```java
+>    Observable.create(object : ObservableOnSubscribe<String> {
+>           override fun subscribe(emitter: ObservableEmitter<String>) {
+>                emitter.onNext("data")
+>           }
+>
+>    })
+>```
+从代码中我们可以看出，这个 source 即为我们创建时传入的 `ObservableOnSubscribe`,因此` emitter.onNext("data")`即是事件发送的起点。我们再继续看`emitter`的 `onNext()` 做了什么：
+```java
+        @Override
+        public void onNext(T t) {
+            if (t == null) {
+                onError(new NullPointerException("onNext called with null. Null values are generally not allowed in 2.x operators and sources."));
+                return;
+            }
+            if (!isDisposed()) {
+                observer.onNext(t);
+            }
+        }
+```
+源码中现实调用了`observer.onNext()`,而这个`observer` 则是前面订阅过程中 `source.subscribe(new MapObserver<T, U>(t, function))` 传入的那个 `observer`，从而将事件发送到了下一级，下一级的 Observer 同样在 `onNext()` 将事件发送到更下一级，一直到最终我们 `subscribe()`时传入的那个`Observer` 实例完毕。
+### 图解
+上述的订阅和发送事件/数据流程可以参看下图，配合途中的标线流转阅读上面源码分析中的文字将会更容易理解。
 
-![enter description here](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585807148894.png)
+**为了更便于理解订阅的流转方向,我将Observable调用 `subscribe()` 订阅描述为了 Observer `beSubscribed()`**
+
+![订阅及数据发送](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585807148894.png)
 # 线程调度
 RxJava 中线程变换通过 `subscribeOn()`和 `observeOn()`两个操作来进行。其中 `subscribeOn()`改变的是订阅线程的执行线程，即事件发生的线程。`observeOn()`改变的是事件结果观察者回调所在线程，即 `onNext()`方法所在的线程。
 
