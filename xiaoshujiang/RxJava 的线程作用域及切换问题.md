@@ -13,8 +13,13 @@ grammar_cjkRuby: true
 - 按着代码书写顺序，事件自上向下发送
 - 订阅从 `subscribe()` 开始自下向上订阅，这也是整个事件流的起点，当订阅开始整个操作才会生效执行
 - 订阅完成后才会发送事件
+### 图解
+**为了更便于理解订阅的流转方向,我将Observable调用 `subscribe()` 订阅描述为了 Observer `beSubscribed()`**
+
+![订阅及数据发送](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585807148894.png)
 ## 源码分析
-以`map()`操作为例：
+### Observabe 创建过程
+此过程对应图中`黑色箭头`部分，以操作符中的`map()`操作为例：
 >```java
 >    @CheckReturnValue
 >    @SchedulerSupport(SchedulerSupport.NONE)
@@ -25,7 +30,7 @@ grammar_cjkRuby: true
 >```
 调用`map`操作符时，RxJavaPliguns 会注册一个新的 `ObservableMap` 对象，查看其它操作符会发现都有对应的 `Observable` 对象产生。同时，上游的 `Observabe`会作为 `source` 参数传入赋值给这个新的 `Observable` 的 `source`属性。层层向下，可以对这个新生成的 `Observable`又可以继续使用操作符。
 ### 订阅过程：
-当调用最后一个  `Observable` 的 `subscribe（）` 方法时，即开始订阅过程。
+当调用最后一个  `Observable` 的 `subscribe（）` 方法时，即开始订阅过程。此过程对应图中`红色箭头`部分
 >```java
 >    @SchedulerSupport(SchedulerSupport.NONE)
 >    @Override
@@ -58,7 +63,9 @@ grammar_cjkRuby: true
 >        source.subscribe(new MapObserver<T, U>(t, function));
 >    }
 >```
-而在这个`subscribeActual()` 方法也很简单，调用了 `source` 去订阅一个新生成的 `Observer` 对象，同时这个新的`MapObserver`会将调用`subscribe()`时传入的 `observer`,赋值给`downstream`属性。这样每一级订阅都会将上级的 `Observable`、本级生成的  `Observer`、订阅下级传入的`Observer`联系起来，直到达到 Observable 最初创建的地方。以 `ObservableCreate`为例：
+而在这个`subscribeActual()` 方法也很简单，调用了 `source` 去订阅一个新生成的 `Observer` 对象，同时这个新的`MapObserver`会将调用`subscribe()`时传入的 `observer`,赋值给`downstream`属性。这样每一级订阅都会将上级的 `Observable`、本级生成的  `Observer`、订阅下级传入的`Observer`联系起来，直到达到 Observable 最初创建的地方整个订阅过程结束。
+### 事件发送过程：
+此过程对应图中`绿色箭头`部分Observable 事件起点创建有很多中操作符，他们都会创建出最初发送的事件/数据，以 `ObservableCreate`为例：
  >```java
 >    @Override
 >    protected void subscribeActual(Observer<? super T> observer) {
@@ -102,13 +109,10 @@ grammar_cjkRuby: true
         }
 ```
 源码中现实调用了`observer.onNext()`,而这个`observer` 则是前面订阅过程中 `source.subscribe(new MapObserver<T, U>(t, function))` 传入的那个 `observer`，从而将事件发送到了下一级，下一级的 Observer 同样在 `onNext()` 将事件发送到更下一级，一直到最终我们 `subscribe()`时传入的那个`Observer` 实例完毕。
-### 图解
-上述的订阅和发送事件/数据流程可以参看下图，配合途中的标线流转阅读上面源码分析中的文字将会更容易理解。
 
-**为了更便于理解订阅的流转方向,我将Observable调用 `subscribe()` 订阅描述为了 Observer `beSubscribed()`**
-
-![订阅及数据发送](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585807148894.png)
 # 线程调度
+事件订阅发送流程通过上面的文章基本已经能够摸清了，我们接下来关注另一个重点 `线程调度`问题。
+## 调度方式
 RxJava 中线程变换通过 `subscribeOn()`和 `observeOn()`两个操作来进行。其中 `subscribeOn()`改变的是订阅线程的执行线程，即事件发生的线程。`observeOn()`改变的是事件结果观察者回调所在线程，即 `onNext()`方法所在的线程。
 
 ![举个栗子](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585809124336.png)
@@ -284,5 +288,7 @@ Observable.just("Data")
 **通过上面的三次日志打印我们可以看出：**
 
 订阅链的日志自下而上打印完毕后，再自上而下打印观察结果。`subscribeOn` 会切换线程，并不是像有的文章所说只有第一次指定线程(即自下而上的最后一次)有效。第一次有效只是我们的错觉，因为订阅是自下而上的，不管前面的线程怎样切换追踪都会切换到 `subscribeOn`第一次指定线程(即自下而上的最后一次)。我们在回调结果中未进行线程切换操作时，只能感知到这一次线程切换 (Map1 与 doOnSubscribe 1 所在线程一致)。`observeOn`的每次指定线程都会让事件流切换到对应的线程中去。完整的事件订阅和发送流程如下图所示，从我们调用 `subscribe()`将观察者和观察对象关联起来开始，`subscribe()` 中传入的 Observer 的 `onNext` 或 `onError`结束，形成了一个逆时针的 `n` 形的链条。右边部分的观察链中，每次 `subscribeOn` 都会切换观察线程。左边部分的事件发送链，会从观察链的最后一次指定的线程开始发送事件，每次调用 `observeOn`都会指定新的事件发送线程。
+## 图解
+参照上面的源码和日志分析，再结合本图相信大家会对 RxJava 的现场调度有一个更立体的认识
 
 ![RxJava2 线程切换流程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1585645839462.png)
