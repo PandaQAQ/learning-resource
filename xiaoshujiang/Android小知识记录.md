@@ -359,3 +359,9 @@ android:descendantFocusability="blocksDescendants"
 ```
 ** SurfaceView 与 TextureView**
 surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可在上面覆盖布局
+
+**AndroidStudio build 日志乱码问题**
+在Android Studio/bin目录下的studio64.exe.vmoptions文件添加一行
+```xml
+-Dfile.encoding=UTF-8
+```
