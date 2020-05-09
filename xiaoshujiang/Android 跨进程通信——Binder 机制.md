@@ -1,11 +1,26 @@
 ---
 title: Android 跨进程通信——Binder 机制
-tags: 新建,模板,小书匠
-renderNumberedHeading: true
-grammar_cjkRuby: true
 ---
 
 Android 系统是一个多进程的复杂系统，各式各样的系统服务提供了对应的系统服务。这些系统进程互相协调来完成各项工作，其工作流程简图如下：
 
 ![系统服务调用简图](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1588996421213.png)
-可通过[Android 源码在线预览](https://www.androidos.net.cn/sourcecode)在线搜索查看对应的 `ServiceManager`。
+用户 APP 中的 `Activity 管理`、`窗口管理`、`消息管理`等等都是通过 SDK 中的对应 Manager 来进行的。而这些 Manager 则是通过 IPC 进程通信去调用对应的系统服务处理相应的事件，系统服务再通过跨进程通信通知执行结果。可通过[Android 源码在线预览](https://www.androidos.net.cn/sourcecode)在线搜索查看对应的 `ServiceManager`。
+
+# IPC 通信基本原理
+一个进程的虚拟地址空间分为两部分，`用户空间`和`内核空间`。其中用户空间为各个进程独享的，不同的进程间是不能直接互相访问的。内核空间一般用户进程是无法直接访问的，都是由操作系统代为操作，内核空间各个进程是共享数据的。如下图所示：
+
+在进程的虚拟空间中注意如下几点：
+- 进程间：
+1、用户空间独立，数据互不共享
+2、内核空间共享，所有的进程公用一个内核空间
+- 进程内：
+用户空间与内核空间数据不能直接进行访问，需要系统代办操作。`copy_from_user（）`将用户空间数据拷贝到内核空间，`copy_to_user（）`将内核空间数据拷贝到用户空间。
+
+## 跨进程交换数据基本流程
+如图所示：
+传统的跨进程通信完成一次 CS 进程数据发送需要经过两次数据复制
+  - 1、系统调用`copy_from_user（）`将数据从 Client 进程用户空间复制到内核空间（第一次复制）
+  - 2、系统调用`copy_to_user（）` 将数据从内核空间复制到 Server 进程（第二次复制）
+
+    
