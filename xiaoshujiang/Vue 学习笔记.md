@@ -1,7 +1,24 @@
 ---
 title: Vue 学习笔记
 ---
+# 生命周期
+与 Android 的 `Activity`,`Fragment` 一样，Vue 的组件页面也有自己的生命周期，具体如下图所示
 
+![vue 生命周期](https://cn.vuejs.org/images/lifecycle.png)
+
+### 父、子组件生命周期钩子函数调用顺序
+- 加载渲染过程
+
+　　`父`beforeCreate->`父`created->`父`beforeMount->`子`beforeCreate->`子`created->`子`beforeMount->`子`mounted->`父`mounted
+
+- 子组件更新过程
+　　`父`beforeUpdate->`子`beforeUpdate->`子`updated->`父`updated
+
+- 父组件更新过程
+　　`父`beforeUpdate->`父`updated
+
+- 销毁过程
+　　`父`beforeDestroy->`子`beforeDestroy->`子`destroyed->`父`destroyed
 # 路由跳转传递参数
 - query 方式传递参数
 ```javascript
