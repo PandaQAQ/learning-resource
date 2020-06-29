@@ -153,3 +153,15 @@ activated () {
     this.mescroll.scrollTo(this.scrollTop,0)
 }
 ```
+# 页面加载优化
+## 页面加载慢
+
+**vendor.js 或 app.js文件巨大** : index.html 文件中使用 [cdn](https://www.bootcdn.cn/all/) 引入依赖，降低 vendor.js 包体积
+
+## 华为手机浏览器无法打开页面
+
+index.html 文件中 cdn 引入脚本 `babel-polyfill` 兼容 es 2015
+
+## Android WebView 无法打开部分页面
+
+检查页面是否使用了缓存，webview 的设置中未开启 dom 缓存（默认情况下缓存是关闭的）
