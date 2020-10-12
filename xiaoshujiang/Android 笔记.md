@@ -74,3 +74,29 @@ ThreadLocal 中存储 threadlocal 与 looper 的 map，ThreadLocalMap 是使用 
 - **弱引用**：只要执行 GC 回收，系统发现了弱引用就会对其进行回收。
 - **虚引用**：随时都可能被系统回收，几乎相当于没引用。get 获取总是会返回 null
 - **被系统回收优先级**：`虚引用`>`弱引用`>`软引用`>`强引用`
+# WebView 白名单验证
+```java
+private static boolean checkDomain(String inputUrl) throws  URISyntaxException {
+    if (!inputUrl.startsWith("http://")&&!inputUrl.startsWith("https://"))
+    {
+        return false;
+    }
+    String[] whiteList=new String[]{"site1.com","site2.com"};
+    java.net.URI url=new java.net.URI(inputUrl);
+    String inputDomain=url.getHost(); //提取host
+    for (String whiteDomain:whiteList)
+    {
+        if (inputDomain.endsWith("."+whiteDomain)) //www.site1.com      app.site2.com
+            return true;
+    }
+    return  false;
+}
+```
+# Apk 打包过程
+- **1** aapt 打包资源文件 阶段
+- **2** aidl 转 java 文件 阶段
+- **3** Java 编译（Compilers）生成.class文件 阶段
+- **4** dex（生成dex文件）阶段
+- **5** apkbuilder（生成未签名apk）阶段
+- **6** Jarsigner（签名）阶段
+- **7** zipalign（对齐） 阶段（减少运行时使用内存）
