@@ -100,3 +100,5 @@ private static boolean checkDomain(String inputUrl) throws  URISyntaxException {
 - **5** apkbuilder（生成未签名apk）阶段
 - **6** Jarsigner（签名）阶段
 - **7** zipalign（对齐） 阶段（减少运行时使用内存）
+
+![打包流程图](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1602467733146.png)
