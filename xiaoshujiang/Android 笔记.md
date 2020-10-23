@@ -102,3 +102,12 @@ private static boolean checkDomain(String inputUrl) throws  URISyntaxException {
 - **7** zipalign（对齐） 阶段（减少运行时使用内存）
 
 ![打包流程图](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1602467733146.png)
+
+# Activity 启动模式
+## Standard 标准模式
+默认的启动模式，每次都会创建一个新的 Activity 压入栈内
+## SingleTop 栈顶复用模式
+如果当前任务的栈顶是这个 Activity 则复用调用 `onNewIntent()` 方法，否则与 Standard 模式一样。例如文章、商品的详情页反复打开关联推荐的详情页
+## SingelTask 栈内复用模式
+会在系统中查找属性值 `affinity` 等于它的属性值 `taskAffinity` 的任务栈，如果存在则在该这个任务栈中启动，否则就在建新任务栈（affinity 值为它的 taskAffinity）启动（FLAG_ACTIVITY_NEW_TASK 同样的情况） 如果在任务栈中已经有该 Activity 的实例，就重用该实例(会调用实例的 onNewIntent() )。重用时，会让该实例回到栈顶，因此在它上面的实例将会被移出栈(即 singleTask 有 clearTop 的效果)。如果栈中不存在该实例，将会创建新的实例放入栈中。
+## SingleInstance 单例模式
