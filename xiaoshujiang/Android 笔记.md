@@ -120,5 +120,5 @@ Activity 放入一个单独的栈内，系统不会往这个栈内放入其他�
 ## taskAffinity
 - 每个 Activity 都有自己所归属的 task。Manifest 中可以通过 `taskAffinity` 指定某个 Activity 所归属的 task，也可以在 `Application` 节点下指定全局的默认 task 的 `taskAffinity`。 
 - Android 手机的任务列表就是根据不同 task 弹出的，我们可以根据任务管理器有几个 item 图标，来知道我们开启了几个 task。
-- `taskAffinity` 必须与代码中 `Intent.FLAG_ACTIVITY_NEW_TASK` 或者配置 `allowTaskReparenting` 属性组合使用，否则并不会去创建新的 `task`，因为 Acvity 打开时默认的 task 为启动他的 Activity 所在的 task。（Ps:`Arouter` 跳转 Activity 只配置 `taskAffinity`会生效）
+- `taskAffinity` 必须与代码中 `Intent.FLAG_ACTIVITY_NEW_TASK` 或者配置 `allowTaskReparenting` 属性组合使用，否则并不会去创建新的 `task`，因为 Acvity 打开时默认的 task 为启动他的 Activity 所在的 task。（Ps:`ARouter` 跳转 Activity 只配置 `taskAffinity`会生效,因为 ARouter 中跳转时默认添加了 `Intent.FLAG_ACTIVITY_NEW_TASK` ）
 ## allowTaskReparenting
