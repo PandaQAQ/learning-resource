@@ -111,3 +111,14 @@ private static boolean checkDomain(String inputUrl) throws  URISyntaxException {
 ## SingelTask 栈内复用模式
 会在系统中查找属性值 `affinity` 等于它的属性值 `taskAffinity` 的任务栈，如果存在则在该这个任务栈中启动，否则就在建新任务栈（affinity 值为它的 taskAffinity）启动（FLAG_ACTIVITY_NEW_TASK 同样的情况） 如果在任务栈中已经有该 Activity 的实例，就重用该实例(会调用实例的 onNewIntent() )。重用时，会让该实例回到栈顶，因此在它上面的实例将会被移出栈(即 singleTask 有 clearTop 的效果)。如果栈中不存在该实例，将会创建新的实例放入栈中。
 ## SingleInstance 单例模式
+Activity 放入一个单独的栈内，系统不会往这个栈内放入其他的 Activity。只能在 Manifest 中指定启动模式，无法在代码中通过 Intent 动态指定
+## Intent 的 Flags 
+- FLAG_ACTIVITY_NEW_TASK 如果 taskAffinity 一样则与标准模式一样新启动一个 Activity,如果不一样则新建一个 task 放该 Activity
+- FLAG_ACTIVITY_SINGLE_TOP 与 SingleTop 效果一致
+- FLAG_ACTIVITY_CLEAR_TOP 销毁目标 Activity 和它之上的所有 Activity，重新创建目标 Activity + FLAG_ACTIVITY_SINGLE_TOP 效果与 SingleTask 效果一致
+- FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS 具有此标记位的 Activity 不会出如今历史 Activity 
+## taskAffinity
+- 每个 Activity 都有自己所归属的 task。Manifest 中可以通过 `taskAffinity` 指定某个 Activity 所归属的 task，也可以在 `Application` 节点下指定全局的默认 task 的 `taskAffinity`。 
+- Android 手机的任务列表就是根据不同 task 弹出的，我们可以根据任务管理器有几个 item 图标，来知道我们开启了几个 task。
+- `taskAffinity` 必须与代码中 `Intent.FLAG_ACTIVITY_NEW_TASK` 或者配置 `allowTaskReparenting` 属性组合使用，否则并不会去创建新的 `task`，因为 Acvity 打开时默认的 task 为启动他的 Activity 所在的 task。（Ps:`Arouter` 跳转 Activity 只配置 `taskAffinity`会生效）
+## allowTaskReparenting
