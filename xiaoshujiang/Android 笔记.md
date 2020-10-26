@@ -122,3 +122,5 @@ Activity 放入一个单独的栈内，系统不会往这个栈内放入其他�
 - Android 手机的任务列表就是根据不同 task 弹出的，我们可以根据任务管理器有几个 item 图标，来知道我们开启了几个 task。
 - `taskAffinity` 必须与代码中 `Intent.FLAG_ACTIVITY_NEW_TASK` 或者配置 `allowTaskReparenting` 属性组合使用，否则并不会去创建新的 `task`，因为 Acvity 打开时默认的 task 为启动他的 Activity 所在的 task。（Ps:`ARouter` 跳转 Activity 只配置 `taskAffinity`会生效,因为 ARouter 中跳转时默认添加了 `Intent.FLAG_ACTIVITY_NEW_TASK` ）
 ## allowTaskReparenting
+允许 Activity 进行任务栈迁移，迁移的规则是：从一个与该Activity TaskAffinity属性不同的任务栈中迁移到与它TaskAffinity相同的任务栈中。
+例如：A 应用中打开 B 应用的 `ActivityB`，由于 ActivityB 被 TaskA 启动，所以其归属的任务栈是 TaskA，当应用 B 启动后，B 应用创建了自己的任务栈，此时 `ActivityB` 将会迁移到 B 的任务栈中。看到的效果即为，A 打开 B 应用的 ActivityB，回到桌面打开 B 应用，此时 B 应用显示的页面为 ActivityB，而不是 B 应用的启动页。
