@@ -141,3 +141,31 @@ Activity 放入一个单独的栈内，系统不会往这个栈内放入其他�
 8、如果队列中没有任务，线程会休眠，休眠时间是传入的时间
 9、某个线程休眠结束后，会再次从任务队列中获取任务，如果任务队列是空的， 则判断当前存活线程数是否大于核心线程数， 如果大于则这个线程就会死亡。
 10、如果小于或者等于最小核心线程， 就会继续休眠。
+## 阿里不推荐使用 Excutors 创建线程池原因
+1、newCachedThreadPool，创建的最大线程数限制为 `Integer.MAX_VALUE`,队列使用 `SynchronousQueue`,来者不拒，如果任务积压过多有导致 OOM 的风险
+```java
+    public static ExecutorService newCachedThreadPool() {
+        return new ThreadPoolExecutor(0, Integer.MAX_VALUE,
+                                      60L, TimeUnit.SECONDS,
+                                      new SynchronousQueue<Runnable>());
+    }
+```
+2、newFixedThreadPool，任务队列使用无界的 `LinkedBlockingQueue`，当线程满载时，任务会无限制的加入到队列中，有导致 OOM 的风险
+```java
+    public static ExecutorService newFixedThreadPool(int nThreads) {
+        return new ThreadPoolExecutor(nThreads, nThreads,
+                                      0L, TimeUnit.MILLISECONDS,
+                                      new LinkedBlockingQueue<Runnable>());
+    }
+```
+3、newSingleThreadExecutor，任务队列使用无界的 `LinkedBlockingQueue`，任务会无限制的加入到队列中，有导致 OOM 的风险
+```java
+    public static ExecutorService newSingleThreadExecutor() {
+        return new FinalizableDelegatedExecutorService
+            (new ThreadPoolExecutor(1, 1,
+                                    0L, TimeUnit.MILLISECONDS,
+                                    new LinkedBlockingQueue<Runnable>()));
+    }
+```
+4、Executors.newScheduledThreadPool(2)
+当任务周期执行时，如果任务时间比周期时间还长，即上一次任务还在执行的时候下一次任务又开始了，刚好执行的任务中代码又有锁，则可能造成线程锁死
