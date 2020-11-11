@@ -180,17 +180,17 @@ class Test{
 
 	private Object object;
 	...
-	// 对象锁，仅仅对 Test 的同一对象实例互斥
+	// 对象锁，仅仅对 Test 的同一对象实例互斥，作用域同实例方法
 	synchronized(this){
 	
 	}
 	
-	// 类锁，对所有的 Test 实例互斥
+	// 类锁，对所有的 Test 实例互斥，作用域同静态方法
 	synchronized(Test.class){
 	
 	}
 	
-	// 对象锁，同一实例互斥
+	// 对象锁，同一实例互斥。只要拿到 object 的对象锁即可运行
 	synchronized(object){
 		
 	}
