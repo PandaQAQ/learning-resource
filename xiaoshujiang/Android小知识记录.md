@@ -365,3 +365,7 @@ surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可�
 ```xml
 -Dfile.encoding=UTF-8
 ```
+** RecyclerView 刷新 item 会渐显出现**
+```kotlin
+(rv_coupons.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
+```
