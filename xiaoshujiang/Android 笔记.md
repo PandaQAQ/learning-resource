@@ -222,4 +222,25 @@ JVM 对 `synchronized` 的优化，线程阻塞和唤醒 CPU 切换是会消耗�
  一块同步代码，是由多个线程交替请求。即不存在同一时间多个线程竞争锁的情况。这种状态下锁会保持轻量级锁状态。当多个线程同一时间竞争锁时轻量锁会膨胀成重量级锁。
 - 偏向锁
  轻量级锁是在没有锁竞争情况下的锁状态，但是在有些时候锁不仅存在多线程的竞争，而且总是由同一个线程获得。因此为了让线程获得锁的代价更低引入了偏向锁的概念。偏向锁的意思是如果一个线程获得了一个偏向锁，如果在接下来的一段时间中没有其他线程来竞争锁，那么持有偏向锁的线程再次进入或者退出同一个同步代码块，不需要再次进行抢占锁和释放锁的操作。
-## ReentrantLock 
+## ReentrantLock 重入锁
+```java
+    public void test() {
+        ReentrantLock lock = new ReentrantLock();
+        lock.lock(); // 占用许可通道
+        // do something,访问需要单线程访问的数据源
+        lock.unlock(); // 释放许可通道
+    }
+```
+## Semaphore 信号量
+```java
+    public void test() {
+        Semaphore semaphore = new Semaphore(1);
+        try {
+            semaphore.acquire(); // 占用许可通道
+            // do something,访问需要单线程访问的数据源
+            semaphore.release(); // 释放许可通道
+        } catch (InterruptedException e) {
+            e.printStackTrace();
+        }
+    }
+```
