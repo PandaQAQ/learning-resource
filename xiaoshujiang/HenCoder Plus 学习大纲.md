@@ -5,13 +5,22 @@ grammar_cjkRuby: true
 ---
 # HTTP
 ## http 基础
-HTTP 超文本传输协议是位于 TCP/IP 体系结构中的应用层协议，它是万维网数据通信的基础。
+HTTP 超文本传输协议是位于 TCP/IP 体系结构中的应用层协议，它是万维网数据通信的基础。当我们访问一个网站时，需要通过统一资源定位符（uniform resource locator，URL）来定位服务器并获取资源。
 ```java
 // 默认端口号是 80 端口，通常可以省略
 <协议>://<域名>:<端口>/<路径>
 ```
-### 概念、原理
 ### 工作机制
+- 1、先通过域名系统（Domain Name System，DNS）查询将域名转换为 IP 地址。即将 test.com 转换为 221.239.100.30 这一过程
+- 2、通过三次握手（稍后会讲）建立 TCP 连接。
+- 3、发起 HTTP 请求。
+- 4、服务器接收到 HTTP 请求并响应请求。
+- 5、目标服务器往客户端发回 HTTP 响应。
+- 6、客户端接收到响应数据做对应的数据展示。
+
+![http 请求过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606097913343.png)
+### 三次握手
+
 ### 数据格式和 REST 
 ## 编码、加密、Hash、序列化和字符集
 ## 登录和授权
