@@ -244,3 +244,9 @@ JVM 对 `synchronized` 的优化，线程阻塞和唤醒 CPU 切换是会消耗�
         }
     }
 ```
+# 对象 hashCode 和 equals 方法为什么要一起重写
+对象默认的 equals 方法比较即是用 a==b 比较地址是否相同，同一个对象才返回 true。当然 String 是重写了 equals，会比较每一个字符是否一致。为什么必须要一起重写了，如果不一起写会导致什么？
+- 1、只重写 equals：
+ 只重写 equals 方法那么可能出现对象比较时，equals 返回 true 但是这两个对象的 HashCode 却不一样，那么在存储对象时基于 hashcode 确定对象就会出错
+ - 2、只重写 hashCode 方法：
+  只重写 hashCode 方法可能导致，两个对象 equals 不相等但是 hashCode 值却一样。基于 hashCode 的存储取出来的数据可能不是想要的那个数据
