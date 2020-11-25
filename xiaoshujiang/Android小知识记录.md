@@ -379,3 +379,5 @@ surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可�
             }
         }
 ```
+**Java 压缩算法对比**
+https://blog.csdn.net/zero__007/article/details/79782846
