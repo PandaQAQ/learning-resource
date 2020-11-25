@@ -369,3 +369,13 @@ surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可�
 ```kotlin
 (rv_coupons.itemAnimator as SimpleItemAnimator).supportsChangeAnimations = false
 ```
+**拦截器中获取 Retrofit 接口中的注解内容**
+```java
+     Invocation invocation = request.tag(Invocation.class);
+        if (invocation != null) {
+            ZipBody zipBody = invocation.method().getAnnotation(ZipBody.class);
+            if (zipBody != null) {
+                zipType = zipBody.type().type;
+            }
+        }
+```
