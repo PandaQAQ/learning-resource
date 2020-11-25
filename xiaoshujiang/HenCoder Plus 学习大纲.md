@@ -114,15 +114,17 @@ Okhttp3 默认支持 Gzip 压缩，只需要服务端添加对应 Header 即可�
 可逆加密，加密后可通过解密还原出原始数据，可逆加密又分为对称加密和非对称加密。
 #### 对称加密（AES、DES）
 AES 加密时一个 SK 扩散成多个 SK,轮加密。
+
 ![AES 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606294649950.png)
 DES 共用一个 SK，可多次迭代使用 DES 加密，如 3DES 加密即是把结果加密再加密。
 
-![3DES 加密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606294592228.png)
+![3DES 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606294592228.png)
 #### 非对称加密(RSA)
-### 不可逆加密（MD5、SHA1）
-不可逆加密在加密后包含的信息不再完整，无法通过算法还原出原始数据
-## 序列化和Hash
+非对称加密过程有一对公钥和私钥，使用公钥加密的数据使用对应的私钥才能解密。
 
+![RSA 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606295510300.png)
+### 不可逆加密（MD5、SHA1）
+不可逆加密在加密后包含的信息不再完整，无法通过算法还原出原始数据。不存在保存秘钥的问题，输入明文后经过加密系统输出不可逆的密文。MD5 和 SHA1 都是基于 Hash  散列实现的。
 ## 登录和授权
 
 ## TCP/IP 协议族
