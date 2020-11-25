@@ -125,8 +125,6 @@ DES 共用一个 SK，可多次迭代使用 DES 加密，如 3DES 加密即是�
 ![RSA 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606295510300.png)
 ### 不可逆加密（MD5、SHA1）
 不可逆加密在加密后包含的信息不再完整，无法通过算法还原出原始数据。不存在保存秘钥的问题，输入明文后经过加密系统输出不可逆的密文。MD5 和 SHA1 都是基于 Hash  散列实现的。
-## 登录和授权
-
 ## TCP/IP 协议族
 
 ## HTTPS
