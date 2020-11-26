@@ -125,10 +125,18 @@ DES 共用一个 SK，可多次迭代使用 DES 加密，如 3DES 加密即是�
 ![RSA 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606295510300.png)
 ### 不可逆加密（MD5、SHA1）
 不可逆加密在加密后包含的信息不再完整，无法通过算法还原出原始数据。不存在保存秘钥的问题，输入明文后经过加密系统输出不可逆的密文。MD5 和 SHA1 都是基于 Hash  散列实现的。
-## TCP/IP 协议族
-
 ## HTTPS
-
+Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数据加密方式可以看下面几组图：
+- 1、对称加密
+![对称加密](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380547317.png)
+秘钥泄漏，中间人截获消息
+![被第三方截获](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380649967.png)
+- 2、非对称加密
+ ![非对称加密](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380708870.png)
+ 公钥泄漏，中间人截获消息
+ ![截获伪造数据](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380848570.png)
+- 3、HTTPS 引入 CA 机构颁发证书
+ ![HTTPS 加密数据过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380926951.png) 
 ## 从 Retrofit 的原理来看 http
 
 ## 从OkHttp 的原理来看 http
