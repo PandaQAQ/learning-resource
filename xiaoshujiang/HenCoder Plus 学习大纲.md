@@ -136,7 +136,18 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
  公钥泄漏，中间人截获消息
  ![截获伪造数据](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380848570.png)
 - 3、HTTPS 引入 CA 机构颁发证书
+ https 中的加密，引入了 CA 机构证书。相当于把服务端的公钥交给一个有公信力的第三方，客户端需要时从证书中获取对应服务端的公钥，这样就避免了任意的第三方截获、伪造公钥。
+ 
  ![HTTPS 加密数据过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606380926951.png) 
+  Https 加密过程如下：
+ - 1、客户端明文请求 https 地址。
+ - 2、服务端返回公钥信息。
+ - 3、客户端验证 CA 证书的合法性（机构、版本、时效等）。
+ - 4、客户端生成一个随机的对称加密秘钥。
+ - 5、使用验证过的证书中的公钥加密生成的随机秘钥并发送给服务端。
+ - 6、服务端使用私有钥解密得到客户端的秘钥。
+ - 7、服务端使用得到的客户端秘钥加密数据并返回给客户端。
+ ![http 加密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606444215309.png)
 ## 从 Retrofit 的原理来看 http
 
 ## 从OkHttp 的原理来看 http
