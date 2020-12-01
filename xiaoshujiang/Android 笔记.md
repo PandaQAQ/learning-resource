@@ -255,3 +255,4 @@ JVM 对 `synchronized` 的优化，线程阻塞和唤醒 CPU 切换是会消耗�
  1、这种方式序列化会涉及 IO 操作，比 Android 特有的 Parcelable
  2、序列化前和反序列化后得到的对象是两个不同的对象，只不过字段属性完全一样。
  3、serialVersionUID 作用在于序列化和反序列化时如果取的时候对象更新字段属性改变了时。如果自己指定了 serialVersionUID，还能反序列化最大可能恢复一致的字段。如果未指定则会直接反序列化失败，程序崩溃。
+ 4、Intent 和 Binder 中使用的是 Parcelable 方式序列化
