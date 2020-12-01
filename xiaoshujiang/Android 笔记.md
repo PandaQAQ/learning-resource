@@ -105,7 +105,7 @@ private static boolean checkDomain(String inputUrl) throws  URISyntaxException {
 
 # Activity 启动模式
 ## Standard 标准模式
-默认的启动模式，每次都会创建一个新的 Activity 压入栈内
+默认的启动模式，每次都会创建一个新的 Activity 压入栈内，所在的栈为启动他的 Activity 所在的栈
 ## SingleTop 栈顶复用模式
 如果当前任务的栈顶是这个 Activity 则复用调用 `onNewIntent()` 方法，否则与 Standard 模式一样。例如文章、商品的详情页反复打开关联推荐的详情页
 ## SingelTask 栈内复用模式
@@ -118,6 +118,7 @@ Activity 放入一个单独的栈内，系统不会往这个栈内放入其他�
 - FLAG_ACTIVITY_CLEAR_TOP 销毁目标 Activity 和它之上的所有 Activity，重新创建目标 Activity + FLAG_ACTIVITY_SINGLE_TOP 效果与 SingleTask 效果一致
 - FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS 具有此标记位的 Activity 不会出如今历史 Activity 
 ## taskAffinity
+只有在配合 SingleTask 和 allowTaskReparenting 使用时有效，其他情况无效
 - 每个 Activity 都有自己所归属的 task。Manifest 中可以通过 `taskAffinity` 指定某个 Activity 所归属的 task，也可以在 `Application` 节点下指定全局的默认 task 的 `taskAffinity`。 
 - Android 手机的任务列表就是根据不同 task 弹出的，我们可以根据任务管理器有几个 item 图标，来知道我们开启了几个 task。
 - `taskAffinity` 必须与代码中 `Intent.FLAG_ACTIVITY_NEW_TASK` 或者配置 `allowTaskReparenting` 属性组合使用，否则并不会去创建新的 `task`，因为 Acvity 打开时默认的 task 为启动他的 Activity 所在的 task。（Ps:`ARouter` 跳转 Activity 只配置 `taskAffinity`会生效,因为 ARouter 中跳转时默认添加了 `Intent.FLAG_ACTIVITY_NEW_TASK` ）
