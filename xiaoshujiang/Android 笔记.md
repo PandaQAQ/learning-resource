@@ -116,7 +116,7 @@ Activity 放入一个单独的栈内，系统不会往这个栈内放入其他�
 - FLAG_ACTIVITY_NEW_TASK 如果 taskAffinity 一样则与标准模式一样新启动一个 Activity,如果不一样则新建一个 task 放该 Activity
 - FLAG_ACTIVITY_SINGLE_TOP 与 SingleTop 效果一致
 - FLAG_ACTIVITY_CLEAR_TOP 销毁目标 Activity 和它之上的所有 Activity，重新创建目标 Activity + FLAG_ACTIVITY_SINGLE_TOP 效果与 SingleTask 效果一致
-- FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS 具有此标记位的 Activity 不会出如今历史 Activity 
+- FLAG_ACTIVITY_EXCLUDE_FROM_RECENTS 具有此标记位的 Activity 不会出如今历史 Activity ，与 XML 中配置 `android:excludeFromRecents="true"` 一致，Activity 不会出现在任务栈中
 ## taskAffinity
 只有在配合 SingleTask 和 allowTaskReparenting 使用时有效，其他情况无效
 - 每个 Activity 都有自己所归属的 task。Manifest 中可以通过 `taskAffinity` 指定某个 Activity 所归属的 task，也可以在 `Application` 节点下指定全局的默认 task 的 `taskAffinity`。 
