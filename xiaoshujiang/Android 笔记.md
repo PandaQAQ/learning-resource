@@ -251,3 +251,7 @@ JVM 对 `synchronized` 的优化，线程阻塞和唤醒 CPU 切换是会消耗�
  只重写 equals 方法那么可能出现对象比较时，equals 返回 true 但是这两个对象的 HashCode 却不一样，那么在存储对象时基于 hashcode 确定对象就会出错
  - 2、只重写 hashCode 方法：
   只重写 hashCode 方法可能导致，两个对象 equals 不相等但是 hashCode 值却一样。基于 hashCode 的存储取出来的数据可能不是想要的那个数据
+ # 序列化 Serializable、Parcelable
+ 1、这种方式序列化会涉及 IO 操作，比 Android 特有的 Parcelable
+ 2、序列化前和反序列化后得到的对象是两个不同的对象，只不过字段属性完全一样。
+ 3、serialVersionUID 作用在于序列化和反序列化时如果取的时候对象更新字段属性改变了时。如果自己指定了 serialVersionUID，还能反序列化最大可能恢复一致的字段。如果未指定则会直接反序列化失败，程序崩溃。
