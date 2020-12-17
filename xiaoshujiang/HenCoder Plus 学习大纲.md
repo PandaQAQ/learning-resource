@@ -90,6 +90,7 @@ Content-Type：数据类型
 Content-Length：内容长度，避免二进制内容丢失
 Location：重定向地址，当返回 301 时，会把新地址放在 Location 中
 User-Agent：用户代理（某某浏览器，某某手机厂商）
+Range / Accept-Range ：支持分段下载时，下载的长度
 ## 请求优化
 ### 减少 http 请求的次数
 建立 http 连接需要三次握手，因此每一次请求的建立需要额外的开销。因此将接口融合、小文件合并传输能减少 http 连接的创建次数达到优化请求的目的
