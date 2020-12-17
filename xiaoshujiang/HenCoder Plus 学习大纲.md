@@ -77,7 +77,13 @@ example:
 ### PUT
 与 GET 方法从服务器读取文档相反，PUT 方法会向服务器写入文档。PUT 方法的语义就是让服务器用请求的主体部分来创建一个由所请求的 URL 命名的新文档。 如果那个文档已存在，就覆盖它，并不会产生一个新的数据对象。
 ### DELETE
-DELETE 方法就是让服务器删除请求 URL 所指定的资源
+DELETE 方法就是让服务器删除请求 URL 所指定的资
+## 请求码
+- 1xx ：
+- 2xx ：请求成功
+- 3xx ：301 站点永久迁移浏览器会重定向
+- 4xx ：客户端错误，400 请求参数之类的有错误，404 路径不正确，401 未登录等原因
+- 5xx ：服务器错误
 
 ## 请求优化
 ### 减少 http 请求的次数
@@ -151,6 +157,12 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
 ## 从 Retrofit 的原理来看 http
 
 ## 从OkHttp 的原理来看 http
+
+# Binder 机制
+
+# Handler 机制
+## 概述
+Handler 机制中有三个重要的角色 `Handler`、`Looper`、`MessageQueen`、`Message`。整个机制的工作流程为，在线程中 Handler 负责将 Message 发送到 MessageQueen 中， Looper 从 MessageQueen 中不断地去取得消息，并根据消息类型
 
 # Kotlin
 ## kotlin 基础
