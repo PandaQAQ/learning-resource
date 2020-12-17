@@ -91,6 +91,7 @@ Content-Length：内容长度，避免二进制内容丢失
 Location：重定向地址，当返回 301 时，会把新地址放在 Location 中
 User-Agent：用户代理（某某浏览器，某某手机厂商）
 Range / Accept-Range ：支持分段下载时，下载的长度
+Cache-Control：`no-cahce` 可以缓存但是需要请求服务器是否过期，`no-store` 不能缓存，`max-age` 规定时间内可缓存
 ## 请求优化
 ### 减少 http 请求的次数
 建立 http 连接需要三次握手，因此每一次请求的建立需要额外的开销。因此将接口融合、小文件合并传输能减少 http 连接的创建次数达到优化请求的目的
