@@ -126,7 +126,7 @@ Okhttp3 默认支持 Gzip 压缩，只需要服务端添加对应 Header 即可�
 ### 可逆加密
 可逆加密，加密后可通过解密还原出原始数据，可逆加密又分为对称加密和非对称加密。
 #### 对称加密（AES、DES）
-AES 加密时一个 SK 扩散成多个 SK,轮加密。
+AES 加密时一个 SK 扩散成多个 SK,轮加密。 DES 秘钥太短容易被破解所以被弃用了
 
 ![AES 加、解密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606294649950.png)
 DES 共用一个 SK，可多次迭代使用 DES 加密，如 3DES 加密即是把结果加密再加密。
