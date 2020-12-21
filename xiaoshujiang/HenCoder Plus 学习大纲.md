@@ -165,6 +165,10 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
  - 6、服务端使用私有钥解密得到客户端的秘钥。
  - 7、服务端使用得到的客户端秘钥加密数据并返回给客户端。
  ![http 加密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606444215309.png)
+## Cookie 和 Authorization
+两种方式都是http 中的授权（登录）方式
+Cookie 主要用在前端与后端交互时的`会话管理`、`用户偏好，主题`、`用户型为分析`等地方，相当于给一个未知的用户打上一个标签。
+
 ## 从 Retrofit 的原理来看 http
 
 ## 从OkHttp 的原理来看 http
