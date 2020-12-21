@@ -167,7 +167,10 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
  ![http 加密过程](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/image/1606444215309.png)
 ## Cookie 和 Authorization
 两种方式都是http 中的授权（登录）方式
-Cookie 主要用在前端与后端交互时的`会话管理`、`用户偏好，主题`、`用户型为分析`等地方，相当于给一个未知的用户打上一个标签。
+### Cookie 
+主要用在前端与后端交互时的`会话管理`、`用户偏好，主题`、`用户型为分析`等地方，相当于给一个未知的用户打上一个标签。因为是公开传输的，所以他不能拿来做身份认证。
+### Authorization
+
 
 ## 从 Retrofit 的原理来看 http
 
