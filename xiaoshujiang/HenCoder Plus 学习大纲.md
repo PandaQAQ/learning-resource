@@ -176,7 +176,7 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
 - CallFactory 
  创建请求的工厂类，默认使用 OkhttpClient 
 - CallAdapterFactory
- 请求结果适配器，处理异步请求回调。默认使用 Platform 类下的 `Android` 类中的 `defaultCallAdapterFactory`即 `ExecutorCallAdapterFactory`。其参数 `callbackExecutor` 为 `Android` 类下的 `defaultCallbackExecutor`。
+ 请求结果适配器，处理异步请求回调。默认使用 Platform 类下的 `Android` 类中的 `defaultCallAdapterFactory`即 `ExecutorCallAdapterFactory`。其参数 `callbackExecutor` 为 `Android` 类下的 `defaultCallbackExecutor`。默认情况下作用是做线程切换，保证结果回调在主线程，还可以通过 RxJava2AdapterFactory 适配 RxJava，将线程切换交给 RxJava
  - ConverFactory
  请求时转换请求数据，响应时将响应结果交给对应的 Convertor 转换城需要的类型
 ![Retrofit 原理](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/images/1609060859233.png)
