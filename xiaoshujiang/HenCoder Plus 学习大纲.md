@@ -173,6 +173,12 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
 
 
 ## 从 Retrofit 的原理来看 http
+- CallFactory 
+ 创建请求的工厂类，默认使用 OkhttpClient 
+- CallAdapterFactory
+ 请求结果适配器，处理异步请求回调。默认使用 Platform 类下的 `Android` 类中的 `defaultCallAdapterFactory`即 `ExecutorCallAdapterFactory`。其参数 `callbackExecutor` 为 `Android` 类下的 `defaultCallbackExecutor`。
+ - ConverFactory
+ 请求时转换请求数据，响应时将响应结果交给对应的 Convertor 转换城需要的类型
 ![Retrofit 原理](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/images/1609060859233.png)
 
 ## 从OkHttp 的原理来看 http
