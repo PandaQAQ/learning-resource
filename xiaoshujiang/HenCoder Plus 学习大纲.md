@@ -173,6 +173,7 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
 
 
 ## 从 Retrofit 的原理来看 http
+![Retrofit 原理](https://raw.githubusercontent.com/PandaQAQ/learning-resource/master/images/1609060859233.png)
 
 ## 从OkHttp 的原理来看 http
 
