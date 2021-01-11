@@ -381,3 +381,5 @@ surfaceview 必须在顶层才可显示，textureview 不需要在顶层，可�
 ```
 **Java 压缩算法对比**
 https://blog.csdn.net/zero__007/article/details/79782846
+**Kotlin RecyclerView使用问题** 
+创建 View 时使用 item.value? 设置值时注意 null 时情空 View，避免 View 复用显示之前的数据
