@@ -187,7 +187,7 @@ Https 即是加了 SSL 层的的 http，保证了数据传输的安全性。数�
 
 # Handler 机制
 ## 概述
-Handler 机制中有三个重要的角色 `Handler`、`Looper`、`MessageQueen`、`Message`。整个机制的工作流程为，在线程中 Handler 负责将 Message 发送到 MessageQueen 中， Looper 从 MessageQueen 中不断地去取得消息，并根据消息类型
+Handler 机制中有四个重要的角色 `Handler`、`Looper`、`MessageQueen`、`Message`。整个机制的工作流程为，在线程中 Handler 负责将 Message 发送到 MessageQueen 中， Looper 从 MessageQueen 中不断地去取得消息，并根据消息类型
 
 # Kotlin
 ## kotlin 基础
